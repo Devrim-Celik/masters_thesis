@@ -80,24 +80,47 @@ def test_correctness_of_changed_edges(generate_random_setup):
 
 
 #@pytest.mark.parametrize('execution_number', range(10))
-def test_correctness_of_splits(generate_random_setup):
+def test_distribution_of_attack_flow(generate_random_setup):
 	# generate a random setup
 	nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites = generate_random_setup
 
 	# run a test, using a random setup and without saving the data
 	data_dict = generate_supported_graph(nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites, False, False)
 
-	# TODO
-	assert True
+	### for each node, note the amount of attack traffic it is supposed to receive
+	### this is our "goal"
+	expected_attack_traffic = [0 for _ in range(nr_ASes)]
+	expected_attack_traffic[data_dict["victim"]] = attack_volume - sum(ally_scrubbing_capabilites)
+	for ally, ally_capabilities in zip(data_dict["allies"], ally_scrubbing_capabilites):
+		expected_attack_traffic[ally] = ally_capabilities
 
-#@pytest.mark.parametrize('execution_number', range(10))
-def test_there_is_no_unprotected_attack_path(generate_random_setup):
-	# generate a random setup
-	nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites = generate_random_setup
+	### calculate how much each node actually received
+	G = data_dict["G_with_splits_colored"]
+	received_attack_traffic = [0 for _ in range(nr_ASes)]
+	received_attack_traffic[data_dict["adversary"]] = attack_volume
+	
+	S = [data_dict["adversary"]]
+	
+	while S:
+		# get the current node
+		current_node = S.pop(-1)
+		# check that has it outwards pointing edges
+		outward_edges = list(G.out_edges(current_node))
+		# if there exist outward pointing edges...
+		if outward_edges:
+			# get a list of all the outward pointing edges with the corresponding split percentages
+			outward_edges_w_perc = [(u, v, G[u][v]["split_perc"]) for u, v in outward_edges]
+			# check that "incoming traffic vol = outgoing traffic vol" by testing that the outgoing
+			# split percentages sum up to one
+			if sum([x[2] for x in outward_edges_w_perc]) != 1:
+				assert False
+			# now start transfering the traffic from the current node to its neighbors
+			incoming_vol = received_attack_traffic[current_node]
+			received_attack_traffic[current_node] = 0
+			for u, v, percentage in outward_edges_w_perc:
+				received_attack_traffic[v] += incoming_vol * percentage
+				# also add the neighbors to the stack, if they received any traffic
+				if percentage > 0:
+					S.append(v)
 
-	# run a test, using a random setup and without saving the data
-	data_dict = generate_supported_graph(nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites, False, False)
-
-
-	# TODO
-	assert True
+	assert all([expected == received for (expected, received) in zip(expected_attack_traffic, received_attack_traffic)])
