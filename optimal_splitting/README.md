@@ -15,7 +15,7 @@ We are given
 	- the attack volume `attack_vol`
 	- the offered scrubbing capabilities for each ally (`capab_ally_1`, `capab_ally_2`, ..., `capab_ally_N`)
 
-#### Desired Outcome
+#### DESIRED OUTCOME
 A new graph `G' = (V, E')` where all edges `E'` are either in `E` or where their reversed directions are in `E'`, such that
 	- one is able to reach all allies and the victim, when starting from `adv` by reversing some of the edges and deciding on the propotion of splits for nodes that have multiple outward pointing edges
 	- the difference between `E` and `E'` is minimized
