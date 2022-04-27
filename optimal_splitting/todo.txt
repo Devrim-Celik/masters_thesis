@@ -1,6 +1,6 @@
-* implement tests (how to import files from one subfolder to another)
+* implement tests (how to import files from one subfolder to another) [STARTED]
 * write read me
-* write main
+* write main [DONE]
 * put it on github [DONE]
 * name for "temp" --> include it in the main function? or not? [DONE]
 * do file docstrings
