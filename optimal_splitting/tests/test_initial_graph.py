@@ -3,9 +3,9 @@ import networkx as nx
 import pytest
 import random
 
-sys.path.insert(0, '../src') # TODO is this smart ??? is there a better way
+sys.path.insert(0, '..') # TODO is this smart ??? is there a better way
 
-from .generate_AS_network import generate_directed_AS_graph, graph_pruning_via_BFS	
+from main import generate_directed_AS_graph, graph_pruning_via_BFS	
 # generate a directed graph represnting the AS network
 
 @pytest.fixture
@@ -23,9 +23,9 @@ def generate_random_setup_for_init():
 	return (nr_ASes, nr_allies)
 
 #@pytest.mark.parametrize('execution_number', range(10))
-def test_sink_behavoir(generate_random_setup):
+def test_sink_behavoir(generate_random_setup_for_init):
 
-	nr_ASes, nr_allies = generate_random_setup
+	nr_ASes, nr_allies = generate_random_setup_for_init
 	# generate a initial graph 
 	G_init, victim, adversary, allies = generate_directed_AS_graph(nr_ASes, nr_allies)
 	# and prune it
@@ -34,6 +34,6 @@ def test_sink_behavoir(generate_random_setup):
 	# test if each node (that is not the victim itself) has the victim as one of their descendants
 	has_connectivity = nr_ASes
 	for node in range(nr_ASes):
-		if (not victim in set(list(nx.descendants(G, node)))) and (node != sinks) :
+		if (not victim in set(list(nx.descendants(G_init, node)))) and (node != victim) :
 			has_connectivity -= 1
 	assert has_connectivity == nr_ASes
