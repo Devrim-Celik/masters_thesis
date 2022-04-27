@@ -1,0 +1,5 @@
+* implement tests (how to import files from one subfolder to another)
+* write read me
+* write main
+* put it on github
+* name for "temp" --> include it in the main function? or not? 
