@@ -1,5 +1,10 @@
 * implement tests (how to import files from one subfolder to another)
 * write read me
 * write main
-* put it on github
-* name for "temp" --> include it in the main function? or not? 
+* put it on github [DONE]
+* name for "temp" --> include it in the main function? or not? [DONE]
+* do file docstrings
+* do function doc strings 
+* What happens if attack volume < sum(capabilities)?
+* include random seeds to recreate setups? --> save in dict as well
+* run tests multiple times with different params
