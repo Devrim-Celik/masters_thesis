@@ -53,7 +53,6 @@ def calculate_merge_split_cost(
     shortest_path = next(shortest_paths_generator)
 
     # go through it, and calculate the associated cost and check whether a edge was changed
-    # for the first time a changed edge was used, note the vertex it came from, this is the splitter
     total_cost = 0
     edge_changes = []
     used_edges = [] # also contains the edges that are used, but not changes, in 
@@ -66,10 +65,7 @@ def calculate_merge_split_cost(
         if "change" in associated_edge_data["edge_origin"]:
             edge_changes.append((u, v))
     
-    # determine the node responsible for the split
-    splitter = edge_changes[0][0]
-
-    return total_cost, splitter, edge_changes, used_edges
+    return total_cost, edge_changes, used_edges
     
 def build_cost_and_split_matrices(
     G:nx.classes.graph.Graph,
@@ -88,8 +84,6 @@ def build_cost_and_split_matrices(
     
     Returns:
         cost_matrix:             contains the cost, rows represent helpers, columns the attack paths
-        split_node_matrix:       contains the node responsible for splitting, rows represent helpers, 
-                                     columns the attack paths
     """
 
     # determine all attack paths
@@ -101,9 +95,9 @@ def build_cost_and_split_matrices(
     # matrix for noting the merge cost and the splitting node if there is any
     # also a list for saving the done changes
     cost_matrix = np.zeros((len(allies), len(attack_paths))).astype("int")
-    split_node_matrix = np.zeros(cost_matrix.shape).astype("int")
     changes_list = [[None for _ in range(len(attack_paths))] for _ in range(len(allies))]
     used_edges_list = [[None for _ in range(len(attack_paths))] for _ in range(len(allies))]
+
     # pair each attack flow with each helper
     for attack_path_indx, attack_path in enumerate(attack_paths):
         for ally, ally_paths in enumerate(allies_paths):
@@ -111,7 +105,6 @@ def build_cost_and_split_matrices(
             # since one ally may have multiple paths, and we are only interested in the one with the
             # lowest cost, we will collected them
             cost_collector = []
-            split_collector = []
             change_collector = []
             used_edges_collector = []
             
@@ -119,24 +112,21 @@ def build_cost_and_split_matrices(
             for ally_path in ally_paths:
 
                 # and calculate the cost for merge/splitting and the splitting node if there is any
-                cost, splitter, changes, used_edges = calculate_merge_split_cost(G, victim, adversary, attack_path, allies[ally], ally_path)
+                cost, changes, used_edges = calculate_merge_split_cost(G, victim, adversary, attack_path, allies[ally], ally_path)
                 # append the to the corresponding collectors
                 cost_collector.append(cost)
-                split_collector.append(splitter)
                 change_collector.append(changes)
                 used_edges_collector.append(used_edges)
             # determine the best split, according to lowest cost, and write it together with the associated
             # splitting node into the previously calculated matrices
             cost_matrix[ally, attack_path_indx] = min(cost_collector)
-            split_node_matrix[ally, attack_path_indx] = split_collector[cost_collector.index(min(cost_collector))]
             changes_list[ally][attack_path_indx] = change_collector[cost_collector.index(min(cost_collector))]
             used_edges_list[ally][attack_path_indx] = used_edges_collector[cost_collector.index(min(cost_collector))]
             
-    return cost_matrix, split_node_matrix, changes_list, used_edges_list
+    return cost_matrix, changes_list, used_edges_list
 
 def ally_assignment_problem(
     cost_matrix:np.ndarray, 
-    split_node_matrix:np.ndarray,
     changes_list:list,
     nr_allies:int,
 ):
@@ -149,7 +139,6 @@ def ally_assignment_problem(
     changes_to_be_done = []
     used_allies = []
     associated_costs = []
-    used_splits = []
     
     # for each attack flow, check the ally that has the lowest cost for helping
     for attack_flow_indx in range(cost_matrix.shape[1]):
@@ -166,7 +155,6 @@ def ally_assignment_problem(
         used_allies.append(chosen_ally)
         associated_costs.append(ally_min_value)
         changes_to_be_done.append(changes_list[chosen_ally][attack_flow_indx])
-        used_splits.append(split_node_matrix[chosen_ally, attack_flow_indx])
 
     # determine all the unique allies used
     used_allies_unique = list(set(used_allies))
@@ -187,25 +175,18 @@ def ally_assignment_problem(
             used_allies.append(unused_ally)
             associated_costs.append(cost_matrix[unused_ally][chosen_attack_flow])
             changes_to_be_done.append(changes_list[unused_ally][chosen_attack_flow])
-            used_splits.append(split_node_matrix[chosen_ally, attack_flow_indx])
 
     # make a list of all the changes to be done
     final_changes = [item for sublist in changes_to_be_done for item in sublist]
     final_changes = list(set(final_changes))
-    
-    # make split uniques
-    used_splits_unique = list(set(used_splits))
-    
-    return final_changes, used_splits_unique    
+  
+    return final_changes    
 
 
 def apply_changes(
     G_init:nx.classes.graph.Graph,
-    list_of_edge_changes:list,
-    used_edges_list:list,
-    used_splits:list,
-    indication_color:str = "orange"
-):
+    list_of_edge_changes:list
+    ):
     G = G_init.copy()
 
     # turn the indicated edges, and also change their color
@@ -252,12 +233,12 @@ def set_splits(G_init, victim, adversary, allies, used_edges_list, attack_volume
             
     # now, go through the used edges and calculate the split percentage
     # TODO more elegant filling of list
-    for node in used_nodes:
+    for node in list(set(used_nodes)):
         # note the total attack volume it is relaying
         remaining = G.nodes[node]["attack_vol"]
         # note all its outward pointing edges that are used for carrying attack traffic
         # and the corresponding nodes with their total incoming attack traffic
-        outward_flows = [(G.nodes[v]["attack_vol"], (u, v)) for u, v in G.out_edges(node) if (u, v) in used_edges_simple]
+        outward_flows = [(G.nodes[v]["attack_vol"], (u, v)) for u, v in G.out_edges(node) if (u, v) in list(set(used_edges_simple))]
         # sort this from small to large by attack volumes
         outward_flows_sorted = sorted(outward_flows)
         # go through each next hop and calculate the percentage of traffic flowing their

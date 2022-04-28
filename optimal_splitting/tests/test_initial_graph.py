@@ -22,7 +22,7 @@ def generate_random_setup_for_init():
 
 	return (nr_ASes, nr_allies)
 
-#@pytest.mark.parametrize('execution_number', range(10))
+@pytest.mark.repeat(0)
 def test_sink_behavoir(generate_random_setup_for_init):
 
 	nr_ASes, nr_allies = generate_random_setup_for_init

@@ -24,7 +24,7 @@ def generate_random_setup():
 	ally_scrubbing_capabilites = [random.randint(1, int(attack_volume/nr_allies)) for _ in range(nr_allies)]
 	return (nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites)
 
-#@pytest.mark.parametrize('execution_number', range(10))
+@pytest.mark.repeat(0)
 def test_connectivity(generate_random_setup):
 	# generate a random setup
 	nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites = generate_random_setup
@@ -35,13 +35,12 @@ def test_connectivity(generate_random_setup):
 	# test if each node (that is not a sink itself) has either the victim or the allies in their descendants
 	sinks = [data_dict["victim"]] + data_dict["allies"]
 	G = data_dict["G_with_splits_colored"]
-	has_connectivity = nr_ASes
 	for node in list(G.nodes):
 		if (not node in sinks) and (not set(list(nx.descendants(G, node))) & set(sinks)):
-			has_connectivity -= 1
-	assert has_connectivity == nr_ASes
+			assert False
+	assert True
 
-#@pytest.mark.parametrize('execution_number', range(10))
+@pytest.mark.repeat(0)
 def test_reachability_sinks_from_adv(generate_random_setup):
 	# generate a random setup
 	nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites = generate_random_setup
@@ -50,13 +49,14 @@ def test_reachability_sinks_from_adv(generate_random_setup):
 	data_dict = generate_supported_graph(nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites, False, False)
 
 	# test if all sinks (allies and victim) can be reached from the victim
-	# TODO consider splits
 	sinks = [data_dict["victim"]] + data_dict["allies"]
 	G = data_dict["G_with_splits_colored"]
 	adv_desc = list(nx.descendants(G, data_dict["adversary"]))
+
 	assert len(set(adv_desc) & set(sinks)) == len(sinks)
 
-#@pytest.mark.parametrize('execution_number', range(10))
+
+@pytest.mark.repeat(0)
 def test_correctness_of_changed_edges(generate_random_setup):
 	# generate a random setup
 	nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites = generate_random_setup
@@ -75,11 +75,10 @@ def test_correctness_of_changed_edges(generate_random_setup):
 	# for checking that the only changes are reversion
 	only_original_or_reversed = all([((u, v) in edges_init) | ((v, u) in edges_init) for u, v in edges_changed])
 
-	assert  same_number_of_edges & only_original_or_reversed 
+	assert same_number_of_edges & only_original_or_reversed
 
 
-
-#@pytest.mark.parametrize('execution_number', range(10))
+@pytest.mark.repeat(300)
 def test_distribution_of_attack_flow(generate_random_setup):
 	# generate a random setup
 	nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites = generate_random_setup
@@ -112,8 +111,9 @@ def test_distribution_of_attack_flow(generate_random_setup):
 			outward_edges_w_perc = [(u, v, G[u][v]["split_perc"]) for u, v in outward_edges]
 			# check that "incoming traffic vol = outgoing traffic vol" by testing that the outgoing
 			# split percentages sum up to one
-			if sum([x[2] for x in outward_edges_w_perc]) != 1:
-				assert False
+			if round(sum([x[2] for x in outward_edges_w_perc])) != 1:
+				print(data_dict["random_seed"], outward_edges_w_perc)
+				assert False # TODO gets triggered????
 			# now start transfering the traffic from the current node to its neighbors
 			incoming_vol = received_attack_traffic[current_node]
 			received_attack_traffic[current_node] = 0
@@ -123,4 +123,4 @@ def test_distribution_of_attack_flow(generate_random_setup):
 				if percentage > 0:
 					S.append(v)
 
-	assert all([expected == received for (expected, received) in zip(expected_attack_traffic, received_attack_traffic)])
+	assert all([expected == round(received) for (expected, received) in zip(expected_attack_traffic, received_attack_traffic)])

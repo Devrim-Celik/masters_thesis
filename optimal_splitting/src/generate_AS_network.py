@@ -131,7 +131,5 @@ def graph_pruning_via_BFS(
             u, v = outward_edges[delete_indx]
             G_pruned.remove_edge(u, v)
             nr_edges_pruned += 1
-            
-    print(f"[*] Pruned {nr_edges_pruned} edges!")
-            
+                   
     return G_pruned

@@ -1,3 +1,4 @@
+import random
 from pathlib import Path
 from datetime import datetime
 
@@ -5,8 +6,6 @@ from src.generate_AS_network import generate_directed_AS_graph, graph_pruning_vi
 from src.auxiliary_functions import save_pyvis_network, save_as_pickle, color_graph
 from src.split_merge import build_cost_and_split_matrices, ally_assignment_problem, apply_changes, set_splits
 
-EXPERIMENT_FOLDER = "./experiments"
-CURRENT_TIMEDATE_STR = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
 
 
 def generate_supported_graph(
@@ -14,9 +13,17 @@ def generate_supported_graph(
 	nr_allies:int = 3,
 	attack_volume:int = 100,
 	ally_scrubbing_capabilities:list = [20, 5, 18],
-	save_data = True,
-	save_html = True
+	save_data:bool = True,
+	save_html:bool = True, 
+	experiment_path:str = "./experiments",
+	seed:int = None
 	):
+
+	# get the timedate and a seed
+	current_timedate_str = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
+	if not seed:
+		seed = random.randint(0, 10000000000000)
+	random.seed(seed)
 
 	#######################################################
 	############## GRAPH GENERATION
@@ -32,13 +39,13 @@ def generate_supported_graph(
 	############## SPLITTING TRAFFIC CALCULATIONS
 	#######################################################
 	# calculate the costs for merging attack flow with the different allies
-	cost_matrix, split_node_matrix, changes_list, used_edges_list = build_cost_and_split_matrices(G_pruned, victim, adversary, allies)
+	cost_matrix, changes_list, used_edges_list = build_cost_and_split_matrices(G_pruned, victim, adversary, allies)
 
 	# solve the assignment problem
-	final_changes, used_splits = ally_assignment_problem(cost_matrix, split_node_matrix, changes_list, nr_allies)
+	final_changes = ally_assignment_problem(cost_matrix, changes_list, nr_allies)
 
 	# apply the changes
-	G_modified = apply_changes(G_pruned, final_changes, used_edges_list, used_splits)
+	G_modified = apply_changes(G_pruned, final_changes)
 
 	# determine the split values and write them into the node/edge attributes
 	G_with_splits = set_splits(G_modified, victim, adversary, allies, used_edges_list, attack_volume, ally_scrubbing_capabilities)
@@ -50,6 +57,8 @@ def generate_supported_graph(
 
 	# create a dictionary to save all the information
 	data_dict = {
+		"random_seed":seed,
+		"experiment_timedate":current_timedate_str,
 		"nr_ASes": nr_ASes,
 		"nr_allies": nr_allies,
 		"attack_volume": attack_volume,
@@ -70,7 +79,8 @@ def generate_supported_graph(
 
 	if save_data or save_html:
 		# create a directory for this run
-		experiment_folder = EXPERIMENT_FOLDER + "/" + CURRENT_TIMEDATE_STR
+		experiment_folder = experiment_path + "/" + current_timedate_str + "_" + str(seed)
+		print(seed)
 		Path(experiment_folder).mkdir(parents=True)
 
 	if save_data:

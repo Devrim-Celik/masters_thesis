@@ -1,10 +1,21 @@
-* implement tests (how to import files from one subfolder to another) [STARTED]
-* write read me
+DONE
+* implement tests (how to import files from one subfolder to another) [DONE]
+* write read me [DONE]
 * write main [DONE]
 * put it on github [DONE]
 * name for "temp" --> include it in the main function? or not? [DONE]
+* include random seeds to recreate setups? --> save in dict as well [DONE]
+* run tests multiple times with different params [DONE]
+* fix index error in test suite test_connectivity [DONE]
+
+TODO
 * do file docstrings
 * do function doc strings 
 * What happens if attack volume < sum(capabilities)?
-* include random seeds to recreate setups? --> save in dict as well
-* run tests multiple times with different params
+* fix error shown in test_distribution_of_attack_flow [PARTLY]
+	--> There seems to be something seriously wrong. Approximately 1/4 of the test runs in test_distribution_of_attack_flow result in erros. After adding
+	rounding in assert comparison, this value is almost unchanged. It seems, that some of the changed edges are wrong, in the sense that:
+		- they are missing
+		- they lead no where
+		- they come from no where
+	HARD PROBLEM ....
