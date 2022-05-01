@@ -29,7 +29,7 @@ def to_directed_via_BFS(
     :type G_init: nx.classes.graph.Graph
     :type victim: int
 
-    :returns: directed graph
+    :return: directed graph
     :rytpe: nx.classes.graph.Graph
     """
     Graph = input_Graph.copy()
@@ -85,12 +85,11 @@ def generate_directed_AS_graph(
     :type nr_ASes: int
     :type nr_allies: int
 
-    :returns: a tuple containing
+    :return: a tuple containing
         * the generated graph
         * the victim node
         * the adversary node
         * the allies of the victim
-
     :rtype: tuple
     """
 
@@ -130,7 +129,7 @@ def graph_pruning_via_BFS(
     :type G_init: nx.classes.graph.Graph
     :type victim: int
 
-    :returns: pruned graph
+    :return: pruned graph
     :rytpe: nx.classes.graph.Graph
     """
 

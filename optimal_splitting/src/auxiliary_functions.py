@@ -25,9 +25,8 @@ def save_as_pickle(
 
     :type object_to_pickle: object
     :type path_to_pickle: str
-
-    :return: None
     """
+
     with open(path_to_pickle, 'wb') as handle:
         pickle.dump(object_to_pickle, handle, protocol=pickle.HIGHEST_PROTOCOL)
     print(f"[+] Saved to \"{path_to_pickle}\".")
@@ -46,6 +45,7 @@ def load_pickle(
     :return: the unpickled Python object
     :rtype: object
     """
+
     with open(path_to_pickle, 'rb') as handle:
         unpickled_object = pickle.load(handle)
     print(f"[+] Loaded \"{path_to_pickle}\".")
@@ -66,6 +66,7 @@ def gen_pyvis_network(
     :return: the PyVis Network
     :rtype: pyvis.network.Network
     """
+
     net = Network(
         notebook = True, 
         directed = True, 
@@ -89,9 +90,8 @@ def save_pyvis_network(
 
     :type Graph: nx.classes.graph.Graph
     :type html_path: str
-
-    :return: None
     """
+
     net = gen_pyvis_network(Graph)
     net.save_graph(html_path)
     print(f"[+] Saved Graph to \"{html_path}\".")
@@ -120,9 +120,10 @@ def assign_attributes(
     :type allies: int
     :type type_to_value: dict
 
-    :returns: the graph with the set attributes
+    :return: the graph with the set attributes
     :rytpe: nx.classes.graph.Graph
     """
+
     for node_indx in range(len(Graph.nodes)):
         # colors according to attack/defense role
         if node_indx == victim:
@@ -163,9 +164,10 @@ def indicate_attack_paths(
     :type victim: int
     :type indication_color: str
 
-    :returns: the graph with the set attributes
+    :return: the graph with the set attributes
     :rytpe: nx.classes.graph.Graph
     """
+
     Graph = input_Graph.copy()
     # use inbuild function to see all the paths that lead from adversary to victim
     all_attack_paths = list(nx.all_simple_paths(Graph, adversary, victim))
@@ -210,9 +212,10 @@ def color_graph(
     :type splitting_color: str
     :type non_splitting_node_color: str
 
-    :returns: the graph with the set attributes
+    :return: the graph with the set attributes
     :rytpe: nx.classes.graph.Graph
     """
+
     Graph = input_Graph.copy()
     
     # define a list for all special nodes

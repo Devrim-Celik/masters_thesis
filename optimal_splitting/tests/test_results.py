@@ -1,31 +1,57 @@
+"""
+A PyTest file that contains test for validating functions from "split_merge.py"
+
+Author:
+    Devrim Celik - 01.05.2022
+"""
+
+
 import sys
 import networkx as nx
 import pytest
 import random
+from typing import Callable
 
 sys.path.insert(0, '..') # TODO is this smart ??? is there a better way
 
 from main import generate_supported_graph
 
+NR_TEST_EXECUTIONS = 100
+
 @pytest.fixture
 def generate_random_setup():
 	"""
-	Generates a set of parameters used for an experiment.
+	Generates a set of parameters used for generating an experiment.
 
-	Returns:
-		nr_ASes (int)						number of ASes vertices
-		nr_allies (int)						number of allies
-		attack_volume (int)					attack volume	
-		ally_scrubbing_capabilites (list): 	scrubbing capabilities of the allies
+	:return: a tuple containing three ints and a list (in this order):
+		* number of ASes
+		* number of allies
+		* attack volume
+		* scrubbing capabilities of the allies
+	:rtype: tuple
 	"""
+
 	nr_ASes = random.randint(100, 500)
 	nr_allies = random.randint(1, 8)
 	attack_volume = random.randint(50, 500)
 	ally_scrubbing_capabilites = [random.randint(1, int(attack_volume/nr_allies)) for _ in range(nr_allies)]
 	return (nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites)
 
-@pytest.mark.repeat(0)
-def test_connectivity(generate_random_setup):
+
+@pytest.mark.repeat(NR_TEST_EXECUTIONS)
+def test_connectivity(
+	generate_random_setup:Callable
+	):
+	"""
+	This function tests whether all nodes are able to reach the victim node or an ally.
+
+	:param generate_random_setup: a pytest fixture that returns a tuple with a random setup
+	
+	:type generate_random_setup_for_init: Callable
+
+	:raises AssertionError: raises an exception if not all nodes can reach the victim node or an ally node
+	"""
+
 	# generate a random setup
 	nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites = generate_random_setup
 
@@ -40,15 +66,28 @@ def test_connectivity(generate_random_setup):
 			assert False
 	assert True
 
-@pytest.mark.repeat(0)
-def test_reachability_sinks_from_adv(generate_random_setup):
+
+@pytest.mark.repeat(NR_TEST_EXECUTIONS)
+def test_reachability_sinks_from_adv(
+	generate_random_setup:Callable
+	):
+	"""
+	This function tests whether the adversary can reach all sinks, i.e., the allies and the victim.
+
+	:param generate_random_setup: a pytest fixture that returns a tuple with a random setup
+	
+	:type generate_random_setup_for_init: Callable
+
+	:raises AssertionError: raises an exception if the adversary can not reach all sinks
+	"""
+
 	# generate a random setup
 	nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites = generate_random_setup
 
 	# run a test, using a random setup and without saving the data
 	data_dict = generate_supported_graph(nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites, False, False)
 
-	# test if all sinks (allies and victim) can be reached from the victim
+	# test if all sinks (allies and victim) can be reached from the adversary
 	sinks = [data_dict["victim"]] + data_dict["allies"]
 	G = data_dict["G_with_splits_colored"]
 	adv_desc = list(nx.descendants(G, data_dict["adversary"]))
@@ -56,8 +95,21 @@ def test_reachability_sinks_from_adv(generate_random_setup):
 	assert len(set(adv_desc) & set(sinks)) == len(sinks)
 
 
-@pytest.mark.repeat(0)
-def test_correctness_of_changed_edges(generate_random_setup):
+@pytest.mark.repeat(NR_TEST_EXECUTIONS)
+def test_correctness_of_changed_edges(
+	generate_random_setup:Callable
+	):
+	"""
+	This function validates that the only changes done to the original graph are the reversion 
+	of edge directions, i.e., no edges were deleted or added.
+
+	:param generate_random_setup: a pytest fixture that returns a tuple with a random setup
+	
+	:type generate_random_setup_for_init: Callable
+
+	:raises AssertionError: raises an exception if any other changes than edge reversions were done
+	"""
+
 	# generate a random setup
 	nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites = generate_random_setup
 
@@ -78,8 +130,24 @@ def test_correctness_of_changed_edges(generate_random_setup):
 	assert same_number_of_edges & only_original_or_reversed
 
 
-@pytest.mark.repeat(300)
-def test_distribution_of_attack_flow(generate_random_setup):
+@pytest.mark.repeat(NR_TEST_EXECUTIONS)
+def test_distribution_of_attack_flow(
+	generate_random_setup:Callable
+	):
+	"""
+	This function starts at the adversary and follows traverses all possible paths from it 
+	along the edge directions. During this traversal, it validates whether the amount of traffic
+	that each node on the way receives and the splits along different edges (both saved as 
+	attributes in the graph) are correct.
+
+	:param generate_random_setup: a pytest fixture that returns a tuple with a random setup
+	
+	:type generate_random_setup_for_init: Callable
+
+	:raises AssertionError: raises an exception if the split percentages / amount of traffic received
+		by nodes is not correct.
+	"""
+
 	# generate a random setup
 	nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites = generate_random_setup
 

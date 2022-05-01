@@ -1,3 +1,12 @@
+"""
+Contains functions that implemented the algorithm to generate minimal changes
+on an input graph such that attack traffic can be diverted to allies of the victim.
+
+Author:
+    Devrim Celik - 01.05.2022
+"""
+
+
 import random
 import networkx as nx
 import numpy as np
@@ -15,6 +24,25 @@ def calculate_merge_split_cost(
     unwanted_change_cost:int = 50,
     return_shortest_path_and_prime_graph:bool = False,
 ):
+   """
+    Creates a directed, acyclic network topology representing the AS network. Edges
+    represent flows as directed by BGP for some IP range.
+    Furthermore assigns a victim node, an adversary node and ally nodes.
+
+    :param nr_ASes: number of AS to be in the graph
+    :param nr_allies: number of allies willing to help scrubbing DDoS traffic      
+
+    :type nr_ASes: int
+    :type nr_allies: int
+
+    :return: a tuple containing
+        * the generated graph
+        * the victim node
+        * the adversary node
+        * the allies of the victim
+    :rtype: tuple
+    """
+
     # start by initializing G prime as a copy of G
     G_prime = G.copy()
     
@@ -79,11 +107,22 @@ def build_cost_and_split_matrices(
     a matrix with the cost of doing so for each (attack_path, ally) pair, together with the associated node 
     that is responsible for splitting the traffic, if there is such a node.
     
-    Args:
+    :param G: nx.classes.graph.Graph
+    :param victim: victim node
+    :param adversary: adversary node
+    :param allies: ally nodes to the victim
+
+    :type G: nx.classes.graph.Graph
+    :type victim: int
+    :type adversary: int
+    :type allies: int
     
-    
-    Returns:
-        cost_matrix:             contains the cost, rows represent helpers, columns the attack paths
+    :return: a tuple with the following elements (in this order)
+        * a matrix that contain the cost for merges, rows represent helpers, columns represent attack paths
+        * a list of lists, containing the associated paths to change for the different diverting actions
+        * a list of lists, containing all used edges (not only changed ones) associated to the diverting actions
+            TODO the second argument can easily be extracted form the third
+    :rtype: np.ndarray           
     """
 
     # determine all attack paths
@@ -131,10 +170,23 @@ def ally_assignment_problem(
     nr_allies:int,
 ):
     """
-    TODO: We dont consider
-        1. if one change in a solution influences other solutions
-    """
+    This function solves the ally assignment problem. It considers a cost matrix, containing the cost for diverting
+    a certain attack path towards a certain ally, and tries to assign the diverting of attack paths to the allies.
     
+    :param cost_matrix: matrix containing the costs, rows represent allies and columns represent attack flows
+    :param changes_list: a list of lists, containing the associated changes to those diverting actions
+    :param nr_allies: number of allies TODO we can remove this, since this information is the nr of rows of the cost matrix
+
+    :type cost_matrix: np.ndarray
+    :type changes_list: list
+    :type nr_allies: int
+
+    :return: a list containing all changes of the selected diverting actions
+    :rtype: list
+
+    :TODO: check how to avoid that the different solutions contradict each other          
+    """
+
     # for collecting all the final changes to be done
     changes_to_be_done = []
     used_allies = []
@@ -184,20 +236,69 @@ def ally_assignment_problem(
 
 
 def apply_changes(
-    G_init:nx.classes.graph.Graph,
+    input_Graph:nx.classes.graph.Graph,
     list_of_edge_changes:list
     ):
-    G = G_init.copy()
+    """
+    Given a graph, and a list of edges, this function will change the topology of the
+    graph by reversing the direction of edges, such that all the edges in the input list
+    are contained in the new graph.
+    
+    :param input_Graph: the graph that whose topology will be changed
+    :param list_of_edge_changes: list of edges that should be included by reversing original edges
+
+    :type input_Graph: nx.classes.graph.Graph
+    :type list_of_edge_changes: list
+
+    :return: the changed graph
+    :rtype: nx.classes.graph.Graph           
+    """
+
+    Graph = input_Graph.copy()
 
     # turn the indicated edges, and also change their color
     for u, v in list_of_edge_changes:
-        G.remove_edge(v, u)
-        G.add_edge(u, v)
+        Graph.remove_edge(v, u)
+        Graph.add_edge(u, v)
 
-    return G
+    return Graph
 
 
-def set_splits(G_init, victim, adversary, allies, used_edges_list, attack_volume, ally_capabilites):
+def set_splits(
+    G_init:nx.classes.graph.Graph, 
+    victim:int, 
+    adversary:int, 
+    allies:list, 
+    used_edges_list:list, 
+    attack_volume:int, 
+    ally_capabilites:list
+    ):
+    """
+    This function goes through a graph, which has been modified in order to divert attack traffic to 
+    allies, and marks how much attack traffic each node will get, and how nodes should split traffic.
+    
+    :param G_init: the finished and modified graph
+    :param victim: the victim node
+    :param adversary: the adversary node
+    :param allies: the ally nodes to the victim
+    :param used_edges_list: the used edges of the different diverting paths
+    :param attack_volume: the attack volume of the adversary
+    :param ally_capabilites: the allies' scrubbing capabilities
+ 
+    :type G_init: nx.classes.graph.Graph
+    :type victim: int
+    :type adversary: int
+    :type allies: list
+    :type used_edges_list: list
+    :type attack_volume: int
+    :type ally_capabilites: list
+
+    :return: the graph, where received attack volume and split percentages have been 
+        added as node and edge attributes
+    :rtype: nx.classes.graph.Graph           
+    """    
+
+
     G = G_init.copy()
     
     # set the default attack volume for all nodes and edges
