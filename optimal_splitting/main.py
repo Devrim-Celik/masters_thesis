@@ -1,3 +1,13 @@
+"""
+This file is used to execute the functions and algorithms defined in `/src`. Explicitly, 
+it will generate a random AS graph and try to diverge an DDoS adversaries traffic towards
+some victim over multiple allies such that graph in question is modified as little as possible. 
+
+Author:
+    Devrim Celik - 01.05.2022
+"""
+
+
 import random
 from pathlib import Path
 from datetime import datetime
@@ -18,6 +28,33 @@ def generate_supported_graph(
 	experiment_path:str = "./experiments",
 	seed:int = None
 	):
+    """
+    This function generates a random graph with a victim, and adversary and multipler allies for the
+    victim, representing an autonomous system network. It then tries to modify the graph as little
+    as possible, in order to divert some of the attack traffic to all the allies.
+
+    :param nr_ASes: the number of ASes int he graph
+    :param nr_allies: the number of allies
+    :param attack_volume: the attack volume of the DDoS adversary
+    :param ally_scrubbing_capabilities: a list of scrubbing capabilities
+    :param save_data: whether to save the generated data 
+    :param save_html: whether to save html figures of the generated graphs
+    :param experiment_path: where to save data and figures
+    :param seed: a random seed
+
+    :param nr_ASes: int
+    :param nr_allies: int
+    :param attack_volume: int 
+    :param ally_scrubbing_capabilities: list
+    :param save_data: str
+    :param save_html: str
+    :param experiment_path: str
+    :param seed: int
+
+
+    :return: all the data generated in this function
+    :type path_to_pickle: dict
+    """
 
 	# get the timedate and a seed
 	current_timedate_str = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
