@@ -144,7 +144,7 @@ def assign_attributes(
 
 
 def indicate_attack_paths(
-    Graph_init:nx.classes.graph.Graph,
+    input_Graph:nx.classes.graph.Graph,
     adversary:int,
     victim:int,
     indication_color:str = "deeppink"
@@ -153,12 +153,12 @@ def indicate_attack_paths(
     Given a graph, this function will color all paths that lead from the adversary node
     to the victim node.
     
-    :param Graph_init: graph for which the attack paths are to be colored
+    :param input_Graph: graph for which the attack paths are to be colored
     :param adversary: the adversary node in the graph
     :param victim: the victim node in the graph
     :param indication_color: the color to use
 
-    :type Graph_init: nx.classes.graph.Graph
+    :type input_Graph: nx.classes.graph.Graph
     :type adversary: int
     :type victim: int
     :type indication_color: str
@@ -166,7 +166,7 @@ def indicate_attack_paths(
     :returns: the graph with the set attributes
     :rytpe: nx.classes.graph.Graph
     """
-    Graph = Graph_init.copy()
+    Graph = input_Graph.copy()
     # use inbuild function to see all the paths that lead from adversary to victim
     all_attack_paths = list(nx.all_simple_paths(Graph, adversary, victim))
 
@@ -183,7 +183,7 @@ def indicate_attack_paths(
 
 
 def color_graph(
-    Graph_init:nx.classes.graph.Graph, 
+    input_Graph:nx.classes.graph.Graph, 
     adversary:int, 
     victim:int, 
     allies:list, 
@@ -194,7 +194,7 @@ def color_graph(
     Given a graph, this function will color nodes and edges based on
     their attributes
     
-    :param Graph_init: graph to color
+    :param input_Graph: graph to color
     :param adversary: the adversary node in the graph
     :param victim: the victim node in the graph
     :param allies: ally nodes to the victim
@@ -203,7 +203,7 @@ def color_graph(
     :param non_splitting_node_color: color used to indicate nodes that do
         not need to split, because they only have one outward pointing edge
 
-    :type Graph_init: nx.classes.graph.Graph
+    :type input_Graph: nx.classes.graph.Graph
     :type adversary: int
     :type victim: int
     :type allies: list
@@ -213,7 +213,7 @@ def color_graph(
     :returns: the graph with the set attributes
     :rytpe: nx.classes.graph.Graph
     """
-    Graph = Graph_init.copy()
+    Graph = input_Graph.copy()
     
     # define a list for all special nodes
     special_nodes = [adversary, victim, *allies]

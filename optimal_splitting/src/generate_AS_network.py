@@ -1,3 +1,12 @@
+"""
+Contains functions that are used to create a realistic representation of the 
+autonomous system graph.
+
+Author:
+    Devrim Celik - 01.05.2022
+"""
+
+
 import networkx as nx
 import random
 
@@ -5,7 +14,7 @@ from .auxiliary_functions import assign_attributes
 
 
 def to_directed_via_BFS(
-    G_init:nx.classes.graph.Graph, 
+    input_Graph:nx.classes.graph.Graph, 
     victim:int
 ):
     """
@@ -14,15 +23,16 @@ def to_directed_via_BFS(
     representing the victim node. It represents the traffic flow with a destination located in
     the victim AS.
 
-    Args:
-        G_init:     undirected networkx graph, reprsenting AS network
-        victim:     victim node identifier
+    :param G_init: undirected networkx graph, reprsenting AS network
+    :param victim: victim node identifier
 
-    Returns:
-        G (nx.classes.graph.Graph): directed graph
+    :type G_init: nx.classes.graph.Graph
+    :type victim: int
+
+    :returns: directed graph
+    :rytpe: nx.classes.graph.Graph
     """
-    
-    G = G_init.copy()
+    Graph = input_Graph.copy()
 
     # representing the queue through a list and the pop(0) and append() methods
     Q = [victim]
@@ -37,7 +47,7 @@ def to_directed_via_BFS(
         current = Q.pop(0)
         
         # consider all neighbors of the current node
-        for neighbor in G.neighbors(current):
+        for neighbor in Graph.neighbors(current):
             
             if not explored[neighbor]:
                 Q.append(neighbor)
@@ -47,17 +57,17 @@ def to_directed_via_BFS(
         explored[current] = True        
     
     # make G into a directed graph
-    G = G.to_directed()
+    Graph = Graph.to_directed()
 
     # remove and add the edges, after checking if this action is legal
     for u,v in edges_to_remove:
-        if (u, v) in G.edges:
+        if (u, v) in Graph.edges:
             G.remove_edge(u, v)
     for u,v, in edges_to_add:
-        if not (u, v) in G.edges:
-            G.add_edge(u, v)
+        if not (u, v) in Graph.edges:
+            Graph.add_edge(u, v)
         
-    return G
+    return Graph
 
 
 def generate_directed_AS_graph(
@@ -69,15 +79,19 @@ def generate_directed_AS_graph(
     represent flows as directed by BGP for some IP range.
     Furthermore assigns a victim node, an adversary node and ally nodes.
 
-    Args:
-        nr_ASes:        number of AS to be in the graph
-        nr_allies:      number of allies willing to help scrubbing DDoS traffic      
+    :param nr_ASes: number of AS to be in the graph
+    :param nr_allies: number of allies willing to help scrubbing DDoS traffic      
 
-    Returns:
-        G (nx.classes.graph.Graph):     topology
-        victim (int):                   identifier of the victim node
-        adversary (int):                identifier of the adversary node
-        allies (list):                  list of identifers for the ally nodes
+    :type nr_ASes: int
+    :type nr_allies: int
+
+    :returns: a tuple containing
+        * the generated graph
+        * the victim node
+        * the adversary node
+        * the allies of the victim
+
+    :rtype: tuple
     """
 
     # generate the an undirected graph, whose topology is close to the AS network
@@ -102,11 +116,26 @@ def generate_directed_AS_graph(
 
 
 def graph_pruning_via_BFS(
-    G:nx.classes.graph.Graph,
+    Graph:nx.classes.graph.Graph,
     victim:int
 ):
+    """
+    Prunes a graph, by considering all outward pointing edges of every node,
+    associating with each of them how far the victim node is if one were to 
+    follow them, and then to delete all nodes that do not have the shortest distance. 
+
+    :param Graph: undirected networkx graph, reprsenting AS network
+    :param victim: victim node
+
+    :type G_init: nx.classes.graph.Graph
+    :type victim: int
+
+    :returns: pruned graph
+    :rytpe: nx.classes.graph.Graph
+    """
+
     # make a copy to not mingle with the original graph
-    G_pruned = G.copy()
+    G_pruned = Graph.copy()
     
     # get a list of all nodes, minus the victim node (it has only incoming connections)
     all_nodes = list(G_pruned.nodes)
