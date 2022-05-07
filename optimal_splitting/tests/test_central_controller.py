@@ -14,9 +14,9 @@ from typing import Callable
 
 sys.path.insert(0, '..') # TODO is this smart ??? is there a better way
 
-from main import central_control_algorithm
+from main import run_experiment
 
-NR_TEST_EXECUTIONS = 10
+NR_TEST_EXECUTIONS = 100
 
 @pytest.fixture
 def generate_random_setup():
@@ -26,6 +26,7 @@ def generate_random_setup():
 	:return: a tuple containing three ints and a list (in this order):
 		* number of ASes
 		* number of allies
+		* mode, either complete or greedy
 		* attack volume
 		* scrubbing capabilities of the allies
 	:rtype: tuple
@@ -33,9 +34,10 @@ def generate_random_setup():
 
 	nr_ASes = random.randint(100, 500)
 	nr_allies = random.randint(1, 5)
+	mode = random.choice(["complete", "greedy"])
 	attack_volume = random.randint(50, 500)
 	ally_scrubbing_capabilites = [random.randint(1, int(attack_volume/nr_allies)) for _ in range(nr_allies)]
-	return (nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites)
+	return (nr_ASes, nr_allies, mode, attack_volume, ally_scrubbing_capabilites)
 
 
 @pytest.mark.repeat(NR_TEST_EXECUTIONS)
@@ -53,10 +55,10 @@ def test_connectivity(
 	"""
 
 	# generate a random setup
-	nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites = generate_random_setup
+	nr_ASes, nr_allies, mode, attack_volume, ally_scrubbing_capabilites = generate_random_setup
 
 	# run a test, using a random setup and without saving the data
-	data_dict = central_control_algorithm(nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites, False, False)
+	data_dict = run_experiment(f"central_controller_{mode}", nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites, False, False)
 
 
 	# test if each node (that is not a sink itself) has either the victim or the allies in their descendants
@@ -83,10 +85,10 @@ def test_reachability_sinks_from_adv(
 	"""
 
 	# generate a random setup
-	nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites = generate_random_setup
+	nr_ASes, nr_allies, mode, attack_volume, ally_scrubbing_capabilites = generate_random_setup
 
 	# run a test, using a random setup and without saving the data
-	data_dict = central_control_algorithm(nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites, False, False)
+	data_dict = run_experiment(f"central_controller_{mode}", nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites, False, False)
 
 	# test if all sinks (allies and victim) can be reached from the adversary
 	sinks = [data_dict["victim"]] + data_dict["allies"]
@@ -112,10 +114,10 @@ def test_correctness_of_changed_edges(
 	"""
 
 	# generate a random setup
-	nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites = generate_random_setup
+	nr_ASes, nr_allies, mode, attack_volume, ally_scrubbing_capabilites = generate_random_setup
 
 	# run a test, using a random setup and without saving the data
-	data_dict = central_control_algorithm(nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites, False, False)
+	data_dict = run_experiment(f"central_controller_{mode}", nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites, False, False)
 
 	# for all edges in the resulting graph, check whether they (or their reversed form) are contained in the original 
 	# graph and that no edges were added/deleted
@@ -150,10 +152,10 @@ def test_distribution_of_attack_flow(
 	"""
 
 	# generate a random setup
-	nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites = generate_random_setup
+	nr_ASes, nr_allies, mode, attack_volume, ally_scrubbing_capabilites = generate_random_setup
 
 	# run a test, using a random setup and without saving the data
-	data_dict = central_control_algorithm(nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites, False, False)
+	data_dict = run_experiment(f"central_controller_{mode}", nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites, False, False)
 	### for each node, note the amount of attack traffic it is supposed to receive
 	### this is our "goal"
 	expected_attack_traffic = [0 for _ in range(nr_ASes)]

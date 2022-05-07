@@ -12,52 +12,130 @@ import networkx as nx
 import numpy as np
 import itertools
 
-def calculate_diverting_cost( # better name ? TODO
+def generate_G_prime(
     G:nx.classes.graph.Graph,
     victim:int,
     source:int,
-    ally_order:list,
+    allies:list,
     step_cost:float,
     change_cost:float,
     unwanted_change_cost:float
     ):
+    """
+    This function will attach weights to a graph, according to supplies arguments.
+
+    :param G: the directed acyclic graph
+    :param victim: the victim node
+    :param source: the source AS of the DDoS attack traffic
+    :param allies: a list of all allies of the victim
+    :param step_cost: the cost we associate for the attack traffic to 
+        travel one step in the graph
+    :param change_cost: the cost for reversing an edge
+    :param unwanted_change_cost: the cost for edges we do not want to change
+
+    :type G: nx.classes.graph.Graph
+    :type victim: int
+    :type source: int
+    :type allies: list
+    :type step_cost: float
+    :type change_cost: float
+    :type unwanted_change_cost: float
+
+    :return: the grpah with edge weights
+    :rtype: nx.classes.graph.Graph
+    """  
+
+    # set the cost of travelling along the attack path
+    attack_flows = list(nx.all_simple_paths(G, source, victim))
+    for flow in attack_flows:
+        for u, v in zip(flow[:-1], flow[1:]):
+            G[u][v]["weight"] = step_cost
+            G[u][v]["on_attack_path"] = True
+            G[u][v]["added"] = False
+
+    # then set the cost of all other edges
+    for u, v in G.edges:
+        if not "on_attack_path" in G[u][v]:
+            G[u][v]["weight"] = step_cost
+            G[u][v]["on_attack_path"] = False
+            G[u][v]["added"] = False
+
+    # for each edge, add the opposite edge with cost
+    edges = list(G.edges) # since it is changing during the loop
+    for u, v in edges:
+        G.add_edge(v, u)
+        G[v][u]["weight"] = change_cost + step_cost
+        G[v][u]["on_attack_path"] = False
+        G[v][u]["added"] = True    
+        G[v][u]["used"] = False
+
+    # set the unwanted changes, i.e., going through the victim and the allies
+    for sink in allies + [victim]:
+        for (u, v) in G.in_edges(sink):
+            G[u][v]["weight"] = unwanted_change_cost
+
+    return G
+
+def determine_modified_graph(
+    G:nx.classes.graph.Graph,
+    victim:int,
+    source:int,
+    allies_ordered:list,
+    step_cost:float,
+    change_cost:float,
+    unwanted_change_cost:float
+    ):
+    """
+    This function will create a candidate modification of a graph according
+    to the specification laid out in the docstring of `centralized_controller`.
+    Explicitly, given an order of the allies, it will go through this order
+    and change the graph such that the adversary can reach each of these allies.
+
+    The fashion in which the most efficient way to include the ally in question in 
+    the descendants of the adversary, is to create a new graph called G', that has
+    weights attached to its edges and to which a new edge is added for each edge
+    in the graph, such that it inverted equivalent.
+
+    :param G: the directed acyclic graph
+    :param victim: the victim node
+    :param source: the source AS of the DDoS attack traffic
+    :param allies_ordered: a list of all allies of the victim, ordered in a certain manner
+    :param step_cost: the cost we associate for the attack traffic to 
+        travel one step in the graph
+    :param change_cost: the cost for reversing an edge
+    :param unwanted_change_cost: the cost for edges we do not want to change
+
+    :type G: nx.classes.graph.Graph
+    :type victim: int
+    :type source: int
+    :type allies_ordered: list
+    :type step_cost: float
+    :type change_cost: float
+    :type unwanted_change_cost: float
+
+    :return: a tuple containing
+        * the modified graph
+        * the associated cost
+    :rtype: tuple
+    """    
 
     G_prime = G.copy()
     total_cost = 0
 
-
-    # set the cost of travelling along the attack path
-    attack_flows = list(nx.all_simple_paths(G_prime, source, victim))
-    for flow in attack_flows:
-        for u, v in zip(flow[:-1], flow[1:]):
-            G_prime[u][v]["weight"] = step_cost
-            G_prime[u][v]["on_attack_path"] = True
-            G_prime[u][v]["added"] = False
-
-    # then set the cost of all other edges
-    for u, v in G_prime.edges:
-        if not "on_attack_path" in G_prime[u][v]:
-            G_prime[u][v]["weight"] = step_cost
-            G_prime[u][v]["on_attack_path"] = False
-            G_prime[u][v]["added"] = False
-
-
-    # for each edge, add the opposite edge with cost
-    edges = list(G_prime.edges) # since it is changing during the loop
-    for u, v in edges:
-        G_prime.add_edge(v, u)
-        G_prime[v][u]["weight"] = change_cost + step_cost
-        G_prime[v][u]["on_attack_path"] = False
-        G_prime[v][u]["added"] = True    
-        G_prime[v][u]["used"] = False
-
-    # set the unwanted changes, i.e., going through the victim
-    for (u, v) in G_prime.in_edges(victim):
-        G_prime[u][v]["weight"] = unwanted_change_cost
+    # add weights to G'
+    G_prime = generate_G_prime(
+        G_prime,
+        victim,
+        source,
+        allies_ordered,
+        step_cost,
+        change_cost,
+        unwanted_change_cost
+        )
     
     # go through the ordered allies, and divert traffic through them by finding the shortest path
     deleted_edges = []
-    for ally in ally_order:
+    for ally in allies_ordered:
         # caculate the shortest path from adversary to ally
         shortest_paths_generator = nx.shortest_simple_paths(G_prime, source, ally, weight="weight")
         shortest_path = list(next(shortest_paths_generator))
@@ -88,7 +166,7 @@ def calculate_diverting_cost( # better name ? TODO
 
 
 
-def centralized_controller(
+def central_controller_complete(
     G:nx.classes.graph.Graph,
     victim:int,
     source:int,
@@ -98,6 +176,36 @@ def centralized_controller(
     unwanted_change_cost:float = 50
     ):
 
+    """
+    This function implements a centralized algorithm that will receive as an input
+    a directed, acylcic graph s.t. the `victim` node is the sink of all other nodes
+    and as an output will return a modified version of this graph, such that 
+    * the adversary can reach the victim and all allies
+    * each other node can reach one ally or the victim
+    * the only changes done is reversing the direction of edges
+    This version will do a complete search on the space of ally ordering.
+
+    :param G: the directed acyclic graph
+    :param victim: the victim node
+    :param source: the source AS of the DDoS attack traffic
+    :param allies: a list of all allies of the victim
+    :param step_cost: see docstring of `calculate_diverting_cost`
+    :param change_cost: see docstring of `calculate_diverting_cost`
+    :param unwanted_change_cost: see docstring of `calculate_diverting_cost`
+
+    :type G: nx.classes.graph.Graph
+    :type victim: int
+    :type source: int
+    :type allies: list
+    :type step_cost: float
+    :type change_cost: float
+    :type unwanted_change_cost: float
+
+    :return: a tuple containing
+        * the modified graph
+        * the associated cost
+    :rtype: tuple
+    """
 
     # get all possible permutations, in which paths to allies can be chosen
     ally_priority_perms = list(itertools.permutations(allies))
@@ -109,11 +217,11 @@ def centralized_controller(
 
     # for each possible permutation, save the cost and the permutation
     for ally_priority in ally_priority_perms:
-        temp_G_prime, temp_total_cost = calculate_diverting_cost(
+        temp_G_prime, temp_total_cost = determine_modified_graph(
                                 G,
                                 victim,
                                 source,
-                                ally_priority,
+                                list(ally_priority),
                                 step_cost,
                                 change_cost,
                                 unwanted_change_cost
@@ -127,6 +235,124 @@ def centralized_controller(
     G_prime = ally_perm_graphs[best_perm_indx]
 
     return G_prime, total_cost
+
+
+def central_controller_greedy(
+    G:nx.classes.graph.Graph,
+    victim:int,
+    source:int,
+    allies:list,
+    step_cost:float = 1,
+    change_cost:float = 5,
+    unwanted_change_cost:float = 50
+    ):
+    """
+    This function implements a centralized algorithm that will receive as an input
+    a directed, acylcic graph s.t. the `victim` node is the sink of all other nodes
+    and as an output will return a modified version of this graph, such that 
+    * the adversary can reach the victim and all allies
+    * each other node can reach one ally or the victim
+    * the only changes done is reversing the direction of edges
+    This version will do a greedy search on the space of ally ordering.
+
+    :param G: the directed acyclic graph
+    :param victim: the victim node
+    :param source: the source AS of the DDoS attack traffic
+    :param allies: a list of all allies of the victim
+    :param step_cost: see docstring of `calculate_diverting_cost`
+    :param change_cost: see docstring of `calculate_diverting_cost`
+    :param unwanted_change_cost: see docstring of `calculate_diverting_cost`
+
+    :type G: nx.classes.graph.Graph
+    :type victim: int
+    :type source: int
+    :type allies: list
+    :type step_cost: float
+    :type change_cost: float
+    :type unwanted_change_cost: float
+
+    :return: a tuple containing
+        * the modified graph
+        * the associated cost
+    :rtype: tuple
+    """
+
+    G_prime = G.copy()
+    total_cost = 0
+
+    # add weights to G'
+    G_prime = generate_G_prime(
+        G_prime,
+        victim,
+        source,
+        allies,
+        step_cost,
+        change_cost,
+        unwanted_change_cost
+        )
+
+    ally_set_already = [False for _ in allies]
+    ally_shortest_distances = [0 for _ in allies]
+    deleted_edges = []
+    
+    # each iteration, connects the "closest" ally to the adversary path
+    for _ in range(len(allies)):
+
+        # this loop is responsible for finding the closest ally
+        for ally_indx_dist, ally_dist in enumerate(allies):
+            # caculate the shortest path from adversary to ally
+            shortest_paths_generator = nx.shortest_simple_paths(G_prime, source, ally_dist, weight="weight")
+            shortest_path = list(next(shortest_paths_generator))
+
+            # calculate the associated distance
+            temp_cost = 0
+            for u, v in zip(shortest_path[:-1], shortest_path[1:]):
+                temp_cost += G_prime[u][v]["weight"]    
+
+            # save this value 
+            ally_shortest_distances[ally_indx_dist] = temp_cost
+
+        # exclude the already set allies by setting the weights to high values
+        for ally_indx_set, set_bool in enumerate(ally_set_already):
+            if set_bool:
+                ally_shortest_distances[ally_indx_set] = float("inf")
+
+        # determine the "closest" ally indx
+        closest_ally_indx = np.argmin(ally_shortest_distances)
+
+        # connect this ally to the attack graph
+        shortest_paths_generator = nx.shortest_simple_paths(G_prime, source, allies[closest_ally_indx], weight="weight")
+        shortest_path = list(next(shortest_paths_generator))
+
+        # go through the shortest path and change the edges if necessary
+        for u, v in zip(shortest_path[:-1], shortest_path[1:]):
+            # accumulate the cost
+            total_cost += G_prime[u][v]["weight"]
+            # once used, it cost will be set to 0
+            G_prime[u][v]["weight"] = 0
+
+            # delete the opposite edge
+            if not (v, u) in deleted_edges:
+                G_prime.remove_edge(v, u)
+                deleted_edges.append((v, u))
+
+            # if the edge was added, note that it is now used
+            if "used" in G_prime[u][v] and G_prime[u][v]["added"]:
+                G_prime[u][v]["used"] = True
+
+        # note that this ally is already included
+        ally_set_already[closest_ally_indx] = True
+
+    # delete all edges that were added but not used
+    edges = list(G_prime.edges) # since it is changing during the loop
+    for u, v in edges:
+        if G_prime[u][v]["added"] and not G_prime[u][v]["used"]:
+            G_prime.remove_edge(u, v)
+
+    return G_prime, total_cost
+
+
+
 
 
 

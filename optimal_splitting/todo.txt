@@ -15,14 +15,17 @@ DONE
 	! test_results [DONE]
 	! main [DONE]
 
-TODO
-* What happens if attack volume < sum(capabilities)? --> Write Input Validation (we assume that we get it right)
-* next to going through all permutations, an option would be nice that is greedy
-* implement cost function
-	* add costs to dictionary and return
-* test_distribution_of_attack_flow still throws error at the end
-* sometimes zero division in set split
+* test_distribution_of_attack_flow still throws error at the end [DONE]
+* sometimes zero division in set split [FIXED, BUT NOT UNDERSTOOD HOW IT HAPPENS]
+* check mode in possible arguments [DONE]
+* What happens if attack volume < sum(capabilities)? --> Write Input Validation (we assume that we get it right) [DONE]
+* next to going through all permutations, an option would be nice that is greedy [TODO] 
+ - FIX ALLY DISTRIBUTION ERROR [DONE]
+ - THEN, AFTER, make it so it is less nice for traffic to go over the ally nodes (unwanted_change / 2) [DONE, but with unwanted_change]
 
+TODO
+* implement cost function [NOT DONE, NOT NECESSARY FOR NOW]
+	* add costs to dictionary and return [DONE]
 STYLE
 * change all G and Graph to graph
 * change adversary to source
@@ -30,5 +33,3 @@ STYLE
 
 
 IMPORTANT:
- - FIX ALLY DISTRIBUTION ERROR
- - THEN, AFTER, make it so it is less nice for traffic to go over the ally nodes (unwanted_change / 2)
