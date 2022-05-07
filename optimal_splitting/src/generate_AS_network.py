@@ -37,7 +37,7 @@ def to_directed_via_BFS(
     # representing the queue through a list and the pop(0) and append() methods
     Q = [victim]
     # for indicating, whether nodes were already explored a not
-    explored = [False]*len(G.nodes)
+    explored = [False]*len(Graph.nodes)
     # for remembering which edges to remove and add
     edges_to_remove = []
     edges_to_add = []
@@ -62,7 +62,7 @@ def to_directed_via_BFS(
     # remove and add the edges, after checking if this action is legal
     for u,v in edges_to_remove:
         if (u, v) in Graph.edges:
-            G.remove_edge(u, v)
+            Graph.remove_edge(u, v)
     for u,v, in edges_to_add:
         if not (u, v) in Graph.edges:
             Graph.add_edge(u, v)

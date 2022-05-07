@@ -1,5 +1,5 @@
 """
-A PyTest file that contains test for validating functions from "split_merge.py"
+A PyTest file that contains test for validating functions from "centralized_control_functions.py"
 
 Author:
     Devrim Celik - 01.05.2022
@@ -14,9 +14,9 @@ from typing import Callable
 
 sys.path.insert(0, '..') # TODO is this smart ??? is there a better way
 
-from main import generate_supported_graph
+from main import central_control_algorithm
 
-NR_TEST_EXECUTIONS = 100
+NR_TEST_EXECUTIONS = 10
 
 @pytest.fixture
 def generate_random_setup():
@@ -32,7 +32,7 @@ def generate_random_setup():
 	"""
 
 	nr_ASes = random.randint(100, 500)
-	nr_allies = random.randint(1, 8)
+	nr_allies = random.randint(1, 5)
 	attack_volume = random.randint(50, 500)
 	ally_scrubbing_capabilites = [random.randint(1, int(attack_volume/nr_allies)) for _ in range(nr_allies)]
 	return (nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites)
@@ -56,7 +56,8 @@ def test_connectivity(
 	nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites = generate_random_setup
 
 	# run a test, using a random setup and without saving the data
-	data_dict = generate_supported_graph(nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites, False, False)
+	data_dict = central_control_algorithm(nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites, False, False)
+
 
 	# test if each node (that is not a sink itself) has either the victim or the allies in their descendants
 	sinks = [data_dict["victim"]] + data_dict["allies"]
@@ -85,7 +86,7 @@ def test_reachability_sinks_from_adv(
 	nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites = generate_random_setup
 
 	# run a test, using a random setup and without saving the data
-	data_dict = generate_supported_graph(nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites, False, False)
+	data_dict = central_control_algorithm(nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites, False, False)
 
 	# test if all sinks (allies and victim) can be reached from the adversary
 	sinks = [data_dict["victim"]] + data_dict["allies"]
@@ -114,7 +115,7 @@ def test_correctness_of_changed_edges(
 	nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites = generate_random_setup
 
 	# run a test, using a random setup and without saving the data
-	data_dict = generate_supported_graph(nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites, False, False)
+	data_dict = central_control_algorithm(nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites, False, False)
 
 	# for all edges in the resulting graph, check whether they (or their reversed form) are contained in the original 
 	# graph and that no edges were added/deleted
@@ -152,8 +153,7 @@ def test_distribution_of_attack_flow(
 	nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites = generate_random_setup
 
 	# run a test, using a random setup and without saving the data
-	data_dict = generate_supported_graph(nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites, False, False)
-
+	data_dict = central_control_algorithm(nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites, False, False)
 	### for each node, note the amount of attack traffic it is supposed to receive
 	### this is our "goal"
 	expected_attack_traffic = [0 for _ in range(nr_ASes)]
@@ -167,7 +167,7 @@ def test_distribution_of_attack_flow(
 	received_attack_traffic[data_dict["adversary"]] = attack_volume
 	
 	S = [data_dict["adversary"]]
-	
+
 	while S:
 		# get the current node
 		current_node = S.pop(-1)
@@ -177,18 +177,26 @@ def test_distribution_of_attack_flow(
 		if outward_edges:
 			# get a list of all the outward pointing edges with the corresponding split percentages
 			outward_edges_w_perc = [(u, v, G[u][v]["split_perc"]) for u, v in outward_edges]
-			# check that "incoming traffic vol = outgoing traffic vol" by testing that the outgoing
-			# split percentages sum up to one
-			if round(sum([x[2] for x in outward_edges_w_perc])) != 1:
-				print(data_dict["random_seed"], outward_edges_w_perc)
-				assert False # TODO gets triggered????
+
 			# now start transfering the traffic from the current node to its neighbors
 			incoming_vol = received_attack_traffic[current_node]
-			received_attack_traffic[current_node] = 0
+			outgoing_vol = 0
+			
+			# check that "incoming traffic vol = outgoing traffic vol" by testing that the outgoing
+			# split percentages sum up to one
+			# this only holds if the current node is not an ally or the victim
+			assert (current_node in data_dict["allies"] + [data_dict["victim"]]) or round(sum([x[2] for x in outward_edges_w_perc])) == 1
+			
+			# 
 			for u, v, percentage in outward_edges_w_perc:
 				received_attack_traffic[v] += incoming_vol * percentage
-				# also add the neighbors to the stack, if they received any traffic
-				if percentage > 0:
+				outgoing_vol += incoming_vol * percentage
+				# also add the neighbors to the stack, if they have any outward going 
+				# flow
+				if percentage > 0 and any([G[u][v]["split_perc"] != 0 for u, v in G.out_edges(v)]):
 					S.append(v)
+
+			# the current nodes received attack traffic is the old one, minus the ones that flew out
+			received_attack_traffic[current_node] -= outgoing_vol
 
 	assert all([expected == round(received) for (expected, received) in zip(expected_attack_traffic, received_attack_traffic)])

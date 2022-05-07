@@ -7,20 +7,28 @@ DONE
 * include random seeds to recreate setups? --> save in dict as well [DONE]
 * run tests multiple times with different params [DONE]
 * fix index error in test suite test_connectivity [DONE]
-
-TODO
 * do file docstrings and function doc strings 
 	! auxiliary [DONE]
 	! generate_AS [DONE]
 	! split_merge [DONE]
 	! test_initial_graph [DONE]
 	! test_results [DONE]
-	! main
-* What happens if attack volume < sum(capabilities)?
-* fix error shown in test_distribution_of_attack_flow [PARTLY]
-	--> There seems to be something seriously wrong. Approximately 1/4 of the test runs in test_distribution_of_attack_flow result in erros. After adding
-	rounding in assert comparison, this value is almost unchanged. It seems, that some of the changed edges are wrong, in the sense that:
-		- they are missing
-		- they lead no where
-		- they come from no where
-	HARD PROBLEM ....
+	! main [DONE]
+
+TODO
+* What happens if attack volume < sum(capabilities)? --> Write Input Validation (we assume that we get it right)
+* next to going through all permutations, an option would be nice that is greedy
+* implement cost function
+	* add costs to dictionary and return
+* test_distribution_of_attack_flow still throws error at the end
+* sometimes zero division in set split
+
+STYLE
+* change all G and Graph to graph
+* change adversary to source
+
+
+
+IMPORTANT:
+ - FIX ALLY DISTRIBUTION ERROR
+ - THEN, AFTER, make it so it is less nice for traffic to go over the ally nodes (unwanted_change / 2)

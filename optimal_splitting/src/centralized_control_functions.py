@@ -10,6 +10,130 @@ Author:
 import random
 import networkx as nx
 import numpy as np
+import itertools
+
+def calculate_diverting_cost( # better name ? TODO
+    G:nx.classes.graph.Graph,
+    victim:int,
+    source:int,
+    ally_order:list,
+    step_cost:float,
+    change_cost:float,
+    unwanted_change_cost:float
+    ):
+
+    G_prime = G.copy()
+    total_cost = 0
+
+
+    # set the cost of travelling along the attack path
+    attack_flows = list(nx.all_simple_paths(G_prime, source, victim))
+    for flow in attack_flows:
+        for u, v in zip(flow[:-1], flow[1:]):
+            G_prime[u][v]["weight"] = step_cost
+            G_prime[u][v]["on_attack_path"] = True
+            G_prime[u][v]["added"] = False
+
+    # then set the cost of all other edges
+    for u, v in G_prime.edges:
+        if not "on_attack_path" in G_prime[u][v]:
+            G_prime[u][v]["weight"] = step_cost
+            G_prime[u][v]["on_attack_path"] = False
+            G_prime[u][v]["added"] = False
+
+
+    # for each edge, add the opposite edge with cost
+    edges = list(G_prime.edges) # since it is changing during the loop
+    for u, v in edges:
+        G_prime.add_edge(v, u)
+        G_prime[v][u]["weight"] = change_cost + step_cost
+        G_prime[v][u]["on_attack_path"] = False
+        G_prime[v][u]["added"] = True    
+        G_prime[v][u]["used"] = False
+
+    # set the unwanted changes, i.e., going through the victim
+    for (u, v) in G_prime.in_edges(victim):
+        G_prime[u][v]["weight"] = unwanted_change_cost
+    
+    # go through the ordered allies, and divert traffic through them by finding the shortest path
+    deleted_edges = []
+    for ally in ally_order:
+        # caculate the shortest path from adversary to ally
+        shortest_paths_generator = nx.shortest_simple_paths(G_prime, source, ally, weight="weight")
+        shortest_path = list(next(shortest_paths_generator))
+
+        # go through the shortest path and change the edges if necessary
+        for u, v in zip(shortest_path[:-1], shortest_path[1:]):
+            # accumulate the cost
+            total_cost += G_prime[u][v]["weight"]
+            # once used, it cost will be set to 0
+            G_prime[u][v]["weight"] = 0
+
+            # delete the opposite edge
+            if not (v, u) in deleted_edges:
+                G_prime.remove_edge(v, u)
+                deleted_edges.append((v, u))
+
+            # if the edge was added, note that it is now used
+            if "used" in G_prime[u][v] and G_prime[u][v]["added"]:
+                G_prime[u][v]["used"] = True
+
+    # delete all edges that were added but not used
+    edges = list(G_prime.edges) # since it is changing during the loop
+    for u, v in edges:
+        if G_prime[u][v]["added"] and not G_prime[u][v]["used"]:
+            G_prime.remove_edge(u, v)
+
+    return G_prime, total_cost
+
+
+
+def centralized_controller(
+    G:nx.classes.graph.Graph,
+    victim:int,
+    source:int,
+    allies:list,
+    step_cost:float = 1,
+    change_cost:float = 5,
+    unwanted_change_cost:float = 50
+    ):
+
+
+    # get all possible permutations, in which paths to allies can be chosen
+    ally_priority_perms = list(itertools.permutations(allies))
+
+    # list for saving the associated cost of a permutation
+    ally_perm_costs = []
+    ally_perm_graphs = []
+
+
+    # for each possible permutation, save the cost and the permutation
+    for ally_priority in ally_priority_perms:
+        temp_G_prime, temp_total_cost = calculate_diverting_cost(
+                                G,
+                                victim,
+                                source,
+                                ally_priority,
+                                step_cost,
+                                change_cost,
+                                unwanted_change_cost
+                                )
+        ally_perm_costs.append(temp_total_cost)
+        ally_perm_graphs.append(temp_G_prime)
+
+    # determine the best permutation, get the associated graph and the cost and return them
+    total_cost = min(ally_perm_costs)
+    best_perm_indx = ally_perm_costs.index(total_cost)
+    G_prime = ally_perm_graphs[best_perm_indx]
+
+    return G_prime, total_cost
+
+
+
+'''
+
+
+
 
 def calculate_merge_split_cost(
     G:nx.classes.graph.Graph,
@@ -22,9 +146,9 @@ def calculate_merge_split_cost(
     split_step_cost:int = 1,
     change_cost:int = 5,
     unwanted_change_cost:int = 50,
-    return_shortest_path_and_prime_graph:bool = False,
+    return_shortest_path_and_prime_graph:bool = False
 ):
-   """
+    """
     Creates a directed, acyclic network topology representing the AS network. Edges
     represent flows as directed by BGP for some IP range.
     Furthermore assigns a victim node, an adversary node and ally nodes.
@@ -264,87 +388,4 @@ def apply_changes(
     return Graph
 
 
-def set_splits(
-    G_init:nx.classes.graph.Graph, 
-    victim:int, 
-    adversary:int, 
-    allies:list, 
-    used_edges_list:list, 
-    attack_volume:int, 
-    ally_capabilites:list
-    ):
-    """
-    This function goes through a graph, which has been modified in order to divert attack traffic to 
-    allies, and marks how much attack traffic each node will get, and how nodes should split traffic.
-    
-    :param G_init: the finished and modified graph
-    :param victim: the victim node
-    :param adversary: the adversary node
-    :param allies: the ally nodes to the victim
-    :param used_edges_list: the used edges of the different diverting paths
-    :param attack_volume: the attack volume of the adversary
-    :param ally_capabilites: the allies' scrubbing capabilities
- 
-    :type G_init: nx.classes.graph.Graph
-    :type victim: int
-    :type adversary: int
-    :type allies: list
-    :type used_edges_list: list
-    :type attack_volume: int
-    :type ally_capabilites: list
-
-    :return: the graph, where received attack volume and split percentages have been 
-        added as node and edge attributes
-    :rtype: nx.classes.graph.Graph           
-    """    
-
-
-    G = G_init.copy()
-    
-    # set the default attack volume for all nodes and edges
-    for node in G.nodes:
-        G.nodes[node]["attack_vol"] = 0
-    for u, v in G.edges:
-        G[u][v]["split_perc"] = 0
-    
-    # set the attack volume of the starting node
-    G.nodes[adversary]["attack_vol"] = attack_volume
-    
-    # calculate the amount the victim has to cover
-    victim_traffic = attack_volume - sum(ally_capabilites)
-    # calculate the shortest path to the victim from the adversary
-    victim_path = list(nx.shortest_simple_paths(G, adversary, victim))[0]
-    
-    
-    # combine ally and victim information
-    scrubbers = allies + [victim]
-    scrubber_volume = ally_capabilites + [victim_traffic]
-    scrubber_paths = [edge_list[0] for edge_list in used_edges_list] + [[(u, v) for u, v in zip(victim_path[:-1], victim_path[1:])]]
-    
-    # keeping track
-    used_nodes = [adversary]
-    used_edges_simple = []
-    
-    # go through each path, and add to each node on the path how much traffic it will relay
-    for scrubber_indx, scrubber_path in enumerate(scrubber_paths):
-        for u, v in scrubber_path:
-            G.nodes[v]["attack_vol"] += scrubber_volume[scrubber_indx]
-            used_nodes.append(v)
-            used_edges_simple.append((u, v))
-            
-    # now, go through the used edges and calculate the split percentage
-    # TODO more elegant filling of list
-    for node in list(set(used_nodes)):
-        # note the total attack volume it is relaying
-        remaining = G.nodes[node]["attack_vol"]
-        # note all its outward pointing edges that are used for carrying attack traffic
-        # and the corresponding nodes with their total incoming attack traffic
-        outward_flows = [(G.nodes[v]["attack_vol"], (u, v)) for u, v in G.out_edges(node) if (u, v) in list(set(used_edges_simple))]
-        # sort this from small to large by attack volumes
-        outward_flows_sorted = sorted(outward_flows)
-        # go through each next hop and calculate the percentage of traffic flowing their
-        for next_hop_volume, (u, v) in outward_flows_sorted:
-            G[u][v]["split_perc"] = min(next_hop_volume/G.nodes[node]["attack_vol"], remaining/G.nodes[node]["attack_vol"])
-            remaining -= next_hop_volume
-    return G
-
+'''
