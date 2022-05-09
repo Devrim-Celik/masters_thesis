@@ -13,20 +13,26 @@ from pathlib import Path
 from datetime import datetime
 
 from src.generate_AS_network import generate_directed_AS_graph, graph_pruning_via_BFS
-from src.auxiliary_functions import save_pyvis_network, save_as_pickle, color_graph, set_splits
+from src.auxiliary_functions import save_pyvis_network, save_as_pickle, color_graph, cost_function
 from src.central_controller_functions import central_controller_complete, central_controller_greedy
+from src.decentralized_functions import decentralized
 
-
+ALGORITHMS = {
+	"central_controller_complete":central_controller_complete,
+	"central_controller_greedy":central_controller_greedy,
+	"decentralized":decentralized
+#	"bgp":None
+}
 
 def run_experiment(
 	mode:str,
 	nr_ASes:int = 200,
-	nr_allies:int = 3,
-	attack_volume:int = 100,
-	ally_scrubbing_capabilities:list = [20, 5, 18],
+	nr_allies:int = 5,
+	attack_volume:int = 200,
+	ally_scrubbing_capabilities:list = [20, 5, 18, 50, 22],
 	save_data:bool = True,
 	save_html:bool = True, 
-	experiment_path:str = "./experiments_central",
+	experiment_path:str = "./experiments",
 	seed:int = None
 	):
 	"""
@@ -38,7 +44,7 @@ def run_experiment(
 	:param mode: defines the way in which the problem is solved; options are
 		* `central_controller_complete`
 		* `central_controller_greedy`
-		* `decentral
+		* `decentralized`
 		* `bgp`
 	:param nr_ASes: the number of ASes int he graph
 	:param nr_allies: the number of allies
@@ -64,11 +70,14 @@ def run_experiment(
 	:type path_to_pickle: dict
 	"""
 
-	if not mode in ["central_controller_complete", "central_controller_greedy"]:
+	if not mode in ALGORITHMS.keys():
 		raise ValueError(f"You entered mode {mode}; this mode is not available.")
 
 	if not attack_volume > sum(ally_scrubbing_capabilities):
 		raise ValueError(f"The attack volume must be greater than the sum of the ally capabilities.")
+
+	if nr_allies != len(ally_scrubbing_capabilities):
+		raise ValueError(f"Number of allies and length of ally scrubbing capabilities must be identical.")
 
 
 	# get the timedate and a seed
@@ -89,22 +98,13 @@ def run_experiment(
 
 	
 	#######################################################
-	############## SPLITTING TRAFFIC CALCULATIONS
+	############## ALGORITHM AND SPLITTING TRAFFIC CALCULATIONS
 	#######################################################
-	if mode == "central_controller_complete":
-		G_modified, cost = central_controller_complete(G_pruned, victim, adversary, allies)
-	elif mode == "central_controller_greedy":
-		G_modified, cost = central_controller_greedy(G_pruned, victim, adversary, allies)
-	elif mode == "decentral":
-		pass
-	elif mode == "bgp":
-		pass
-
-	# determine the split values and write them into the node/edge attributes
-	G_with_splits = set_splits(G_modified, victim, adversary, allies, attack_volume, ally_scrubbing_capabilities, seed)
+	G_modified = ALGORITHMS[mode](G_pruned, victim, adversary, allies, ally_scrubbing_capabilities, attack_volume)
+	cost = cost_function(G_pruned, G_modified, victim, adversary, allies, 1, 3)
 
 	# color the graph
-	G_with_splits_colored = color_graph(G_with_splits, adversary, victim, allies)
+	G_modified_colored = color_graph(G_modified, adversary, victim, allies)
 
 
 	#######################################################
@@ -126,14 +126,12 @@ def run_experiment(
 		"G_init": G_init,
 		"G_pruned": G_pruned, 
 		"G_modified": G_modified,
-		"G_with_splits": G_with_splits,
-		"G_with_splits_colored": G_with_splits_colored
+		"G_modified_colored": G_modified_colored
 	}
 
 	if save_data or save_html:
 		# create a directory for this run
-		experiment_folder = experiment_path + "/" + current_timedate_str + "_" + str(seed)
-		print(seed)
+		experiment_folder = f"{experiment_path}/{current_timedate_str}_{str(seed)}_{mode}"
 		Path(experiment_folder).mkdir(parents=True)
 
 	if save_data:
@@ -143,10 +141,9 @@ def run_experiment(
 		save_pyvis_network(G_init, experiment_folder + "/01_initial_Graph.html")
 		save_pyvis_network(G_pruned, experiment_folder + "/02_pruned_Graph.html")
 		save_pyvis_network(G_modified, experiment_folder + "/03_modified_Graph.html")
-		save_pyvis_network(G_with_splits, experiment_folder + "/04_modified_Graph_with_splits.html")
-		save_pyvis_network(G_with_splits_colored, experiment_folder + "/05_modified_Graph_with_splits_colored.html")
+		save_pyvis_network(G_modified_colored, experiment_folder + "/04_modified_Graph_colored.html")
 
 	return data_dict
 
 if __name__=="__main__":
-	run_experiment("central_controller_greedy")
+	run_experiment("decentralized")

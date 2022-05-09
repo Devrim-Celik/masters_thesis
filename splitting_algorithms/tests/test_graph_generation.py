@@ -16,6 +16,8 @@ sys.path.insert(0, '..') # TODO is this smart ??? is there a better way
 
 from main import generate_directed_AS_graph, graph_pruning_via_BFS	
 
+NR_EXECUTIONS_PER_TEST = 2
+
 @pytest.fixture
 def generate_random_setup():
 	"""
@@ -29,7 +31,7 @@ def generate_random_setup():
 
 	return (nr_ASes, nr_allies)
 
-@pytest.mark.repeat(0)
+@pytest.mark.repeat(NR_EXECUTIONS_PER_TEST)
 def test_sink_behavoir(
 	generate_random_setup:Callable
 	):

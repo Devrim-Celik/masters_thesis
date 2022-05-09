@@ -1,0 +1,60 @@
+==================> DONE
+* implement tests (how to import files from one subfolder to another) [DONE]
+* write read me [DONE]
+* write main [DONE]
+* put it on github [DONE]
+* name for "temp" --> include it in the main function? or not? [DONE]
+* include random seeds to recreate setups? --> save in dict as well [DONE]
+* run tests multiple times with different params [DONE]
+* fix index error in test suite test_connectivity [DONE]
+* do file docstrings and function doc strings 
+	! auxiliary [DONE]
+	! generate_AS [DONE]
+	! split_merge [DONE]
+	! test_initial_graph [DONE]
+	! test_results [DONE]
+	! main [DONE]
+* test_distribution_of_attack_flow still throws error at the end [DONE]
+* sometimes zero division in set split [FIXED, BUT NOT UNDERSTOOD HOW IT HAPPENS]
+* check mode in possible arguments [DONE]
+* What happens if attack volume < sum(capabilities)? --> Write Input Validation (we assume that we get it right) [DONE]
+* next to going through all permutations, an option would be nice that is greedy [TODO] 
+ - FIX ALLY DISTRIBUTION ERROR [DONE]
+ - THEN, AFTER, make it so it is less nice for traffic to go over the ally nodes (unwanted_change / 2) [DONE, but with unwanted_change]
+* hook decentralized up to test function, and make test function accept command line arguments [DONE]
+	* fix decentralized if necessary [DONE]
+* put set splits in centralized functions file [DONE]
+* add mode name to file name [DONE]
+* in tests: E     ValueError: The attack volume must be greater than the sum of the ally capabilities. [DONE]
+* implement cost function and use it to calculate costs [DONE]
+	* add costs to dictionary and return [DONE]
+* add cost function in decentralized [DONE, but instead of adding to decentralized, added to main]
+* check that len(scrubbing_cap) == len(alies) [DONE]
+* create a function to compre different algorithms no the same graph/victim/source/allies/capab/attack_vol [DONE]
+	* maybe fixed amount of nodes, then increase number of allies, have a a nice graph for that [DONE]
+	* maybe also run multiple set ups for same amount of nodes and allies, to heave variance in there [DONE]
+
+============================================================================================================
+==================> TODO
+* add splits to decentralized
+* recomment everything
+* new test -> make sure that there exists no other endgoals for traffic except for victim (and allies for modified graph)
+* verbose option for printing saving and loading
+* update readme
+
+============================================================================================================
+==================> RARE TEST ERRORS TO FIX
+-> central_greedy, 500 test distribution test cases, 2 times this error
+"""
+>   	assert all([expected == round(received) for (expected, received) in zip(expected_attack_traffic, received_attack_traffic)])
+E    assert False
+E     +  where False = all([True, True, True, True, True, True, ...])
+
+"""
+	--> In 500 tests with central controller complete, didnt happen,  maybe test again.
+
+
+============================================================================================================
+==================> STYLE
+* change all G and Graph to graph
+* change adversary to source

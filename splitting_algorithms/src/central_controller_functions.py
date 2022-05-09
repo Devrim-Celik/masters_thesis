@@ -132,7 +132,7 @@ def determine_modified_graph(
         change_cost,
         unwanted_change_cost
         )
-    
+ 
     # go through the ordered allies, and divert traffic through them by finding the shortest path
     deleted_edges = []
     for ally in allies_ordered:
@@ -161,9 +161,95 @@ def determine_modified_graph(
     for u, v in edges:
         if G_prime[u][v]["added"] and not G_prime[u][v]["used"]:
             G_prime.remove_edge(u, v)
+            
 
     return G_prime, total_cost
 
+
+def set_splits(
+    G_init:nx.classes.graph.Graph, 
+    victim:int, 
+    adversary:int, 
+    allies:list, 
+    ally_capabilites:list,
+    attack_volume:int
+    ):
+    """
+    This function goes through a graph, which has been modified in order to divert attack traffic to 
+    allies, and marks how much attack traffic each node will get, and how nodes should split traffic.
+    
+    :param G_init: the finished and modified graph
+    :param victim: the victim node
+    :param adversary: the adversary node
+    :param allies: the ally nodes to the victim
+    :param ally_capabilites: the allies' scrubbing capabilities
+    :param attack_volume: the attack volume of the adversary
+
+    :type G_init: nx.classes.graph.Graph
+    :type victim: int
+    :type adversary: int
+    :type allies: list
+    :type ally_capabilites: list
+    :type attack_volume: int
+
+
+    :return: the graph, where received attack volume and split percentages have been 
+        added as node and edge attributes
+    :rtype: nx.classes.graph.Graph           
+    """    
+
+
+    G = G_init.copy()
+    
+    # set the default attack volume for all nodes and edges
+    for node in G.nodes:
+        G.nodes[node]["attack_vol"] = 0
+    for u, v in G.edges:
+        G[u][v]["split_perc"] = 0
+    
+    # set the attack volume of the starting node
+    G.nodes[adversary]["attack_vol"] = attack_volume
+    
+    # calculate the amount the victim has to cover
+    victim_traffic = attack_volume - sum(ally_capabilites)
+
+    # combine ally and victim information
+    scrubbers = allies + [victim]
+    scrubber_volume = ally_capabilites + [victim_traffic]
+
+    scrubber_paths = []
+    for scrubber in scrubbers:
+        shortest_path_to_scrubber = list(nx.shortest_simple_paths(G, adversary, scrubber))[0]
+        scrubber_paths.append([(u, v) for u, v in zip(shortest_path_to_scrubber[:-1], shortest_path_to_scrubber[1:])])
+
+    # keeping track
+    used_nodes = [adversary]
+    used_edges_simple = []
+
+    # go through each path, and add to each node on the path how much traffic it will relay
+    for scrubber_indx, scrubber_path in enumerate(scrubber_paths):
+        for u, v in scrubber_path:
+            G.nodes[v]["attack_vol"] += scrubber_volume[scrubber_indx]
+            used_nodes.append(v)
+            used_edges_simple.append((u, v))
+            
+    # now, go through the used edges and calculate the split percentage
+    # TODO more elegant filling of list
+    for node in list(set(used_nodes)):
+        # note the total attack volume it is relaying
+        remaining = G.nodes[node]["attack_vol"]
+
+        if remaining != 0: #TODO very rarely, this value is 0 and causes a division through 0 error,; dont understand how it happens
+            # note all its outward pointing edges that are used for carrying attack traffic
+            # and the corresponding nodes with their total incoming attack traffic
+            outward_flows = [(G.nodes[v]["attack_vol"], (u, v)) for u, v in G.out_edges(node) if (u, v) in list(set(used_edges_simple))]
+            # sort this from small to large by attack volumes
+            outward_flows_sorted = sorted(outward_flows)
+            # go through each next hop and calculate the percentage of traffic flowing their
+            for next_hop_volume, (u, v) in outward_flows_sorted:
+                G[u][v]["split_perc"] = min(next_hop_volume/G.nodes[node]["attack_vol"], remaining/G.nodes[node]["attack_vol"])
+                remaining -= next_hop_volume
+    return G
 
 
 def central_controller_complete(
@@ -171,6 +257,8 @@ def central_controller_complete(
     victim:int,
     source:int,
     allies:list,
+    ally_scrubbing_capabilities:list,
+    attack_volume:int,
     step_cost:float = 1,
     change_cost:float = 5,
     unwanted_change_cost:float = 50
@@ -201,10 +289,8 @@ def central_controller_complete(
     :type change_cost: float
     :type unwanted_change_cost: float
 
-    :return: a tuple containing
-        * the modified graph
-        * the associated cost
-    :rtype: tuple
+    :return: the modified graph
+    :rtype: nx.classes.graph.Graph
     """
 
     # get all possible permutations, in which paths to allies can be chosen
@@ -234,7 +320,11 @@ def central_controller_complete(
     best_perm_indx = ally_perm_costs.index(total_cost)
     G_prime = ally_perm_graphs[best_perm_indx]
 
-    return G_prime, total_cost
+    # finally set the splits
+    G_prime_with_splits = set_splits(G_prime, victim, source, allies, ally_scrubbing_capabilities, attack_volume)
+
+    return G_prime_with_splits
+
 
 
 def central_controller_greedy(
@@ -242,6 +332,8 @@ def central_controller_greedy(
     victim:int,
     source:int,
     allies:list,
+    ally_scrubbing_capabilities:list,
+    attack_volume:int,
     step_cost:float = 1,
     change_cost:float = 5,
     unwanted_change_cost:float = 50
@@ -271,10 +363,8 @@ def central_controller_greedy(
     :type change_cost: float
     :type unwanted_change_cost: float
 
-    :return: a tuple containing
-        * the modified graph
-        * the associated cost
-    :rtype: tuple
+    :return: the modified graph
+    :rtype: nx.classes.graph.Graph
     """
 
     G_prime = G.copy()
@@ -349,7 +439,11 @@ def central_controller_greedy(
         if G_prime[u][v]["added"] and not G_prime[u][v]["used"]:
             G_prime.remove_edge(u, v)
 
-    return G_prime, total_cost
+
+    # finally set the splits
+    G_prime_with_splits = set_splits(G_prime, victim, source, allies, ally_scrubbing_capabilities, attack_volume)
+
+    return G_prime_with_splits
 
 
 
@@ -357,10 +451,6 @@ def central_controller_greedy(
 
 
 '''
-
-
-
-
 def calculate_merge_split_cost(
     G:nx.classes.graph.Graph,
     victim:int, 

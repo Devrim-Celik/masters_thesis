@@ -12,6 +12,9 @@ Author:
 import pickle
 from pyvis.network import Network
 import networkx as nx
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 def save_as_pickle(
     object_to_pickle:object, 
@@ -96,6 +99,27 @@ def save_pyvis_network(
     net.save_graph(html_path)
     print(f"[+] Saved Graph to \"{html_path}\".")
 
+def comparison_plot(
+    comparison_results_df:pd.DataFrame,
+    figure_path:str,
+    nr_ASes:int,
+    nr_executions:int,
+    figure_size:tuple = (16, 10),
+    alpha:float = 0.8
+    ):
+
+    plt.figure(figsize = figure_size)
+    sns.lineplot(
+        data = comparison_results_df, 
+        x = "nr_allies", 
+        y = "cost", 
+        hue = "mode", 
+        alpha = alpha)
+    plt.title(f"Comparison of Algorithms of Increasing Number of Allies.\nNumber of ASes: {nr_ASes}   |    Number of Executions: {nr_executions}")
+    plt.legend(loc = 'upper left')
+
+    plt.savefig(figure_path)
+    print(f"[+] Saved to \"{figure_path}\".")
 
 def assign_attributes(
     Graph:nx.classes.graph.Graph, 
@@ -236,88 +260,50 @@ def color_graph(
     return Graph
 
 
-
-def set_splits(
-    G_init:nx.classes.graph.Graph, 
-    victim:int, 
-    adversary:int, 
-    allies:list, 
-    attack_volume:int, 
-    ally_capabilites:list,
-    seed:int
+def cost_function(
+    G_original:nx.classes.graph.Graph,
+    G_modified:nx.classes.graph.Graph,
+    victim:int,
+    source:int,
+    allies:list,
+    step_cost:int,
+    router_entry_change_cost:int
     ):
-    """
-    This function goes through a graph, which has been modified in order to divert attack traffic to 
-    allies, and marks how much attack traffic each node will get, and how nodes should split traffic.
-    
-    :param G_init: the finished and modified graph
-    :param victim: the victim node
-    :param adversary: the adversary node
-    :param allies: the ally nodes to the victim
-    :param attack_volume: the attack volume of the adversary
-    :param ally_capabilites: the allies' scrubbing capabilities
- 
-    :type G_init: nx.classes.graph.Graph
-    :type victim: int
-    :type adversary: int
-    :type allies: list
-    :type attack_volume: int
-    :type ally_capabilites: list
-
-    :return: the graph, where received attack volume and split percentages have been 
-        added as node and edge attributes
-    :rtype: nx.classes.graph.Graph           
-    """    
 
 
-    G = G_init.copy()
-    
-    # set the default attack volume for all nodes and edges
-    for node in G.nodes:
-        G.nodes[node]["attack_vol"] = 0
-    for u, v in G.edges:
-        G[u][v]["split_perc"] = 0
-    
-    # set the attack volume of the starting node
-    G.nodes[adversary]["attack_vol"] = attack_volume
-    
-    # calculate the amount the victim has to cover
-    victim_traffic = attack_volume - sum(ally_capabilites)
+    ###########################################################################
+    # part 1 of cost function: count the number of router table entry changes #
+    ###########################################################################
+    edge_reversions = 0
+    for edge in G_original.edges:
+        if not edge in G_modified.edges:
+            edge_reversions += 1
+    cost_change = 2 * edge_reversions * router_entry_change_cost
 
-    # combine ally and victim information
-    scrubbers = allies + [victim]
-    scrubber_volume = ally_capabilites + [victim_traffic]
 
-    scrubber_paths = []
-    for scrubber in scrubbers:
-        shortest_path_to_scrubber = list(nx.shortest_simple_paths(G, adversary, scrubber))[0]
-        scrubber_paths.append([(u, v) for u, v in zip(shortest_path_to_scrubber[:-1], shortest_path_to_scrubber[1:])])
+    ################################################################################
+    # part 2 of cost function: count the number of edges added to the attack flows #
+    ################################################################################
+    attack_path_edges_original = []
+    attack_path_edges_modified = []
 
-    # keeping track
-    used_nodes = [adversary]
-    used_edges_simple = []
+    # calculate the edges that are on the attack path in the original graph
+    attack_flows_original = list(nx.all_simple_paths(G_original, source, victim))
+    for attack_flow in attack_flows_original:
+        for edge in zip(attack_flow[:-1], attack_flow[1:]):
+            attack_path_edges_original.append(edge)
+    nr_edges_attack_flow_original = len(set(attack_path_edges_original))
 
-    # go through each path, and add to each node on the path how much traffic it will relay
-    for scrubber_indx, scrubber_path in enumerate(scrubber_paths):
-        for u, v in scrubber_path:
-            G.nodes[v]["attack_vol"] += scrubber_volume[scrubber_indx]
-            used_nodes.append(v)
-            used_edges_simple.append((u, v))
-            
-    # now, go through the used edges and calculate the split percentage
-    # TODO more elegant filling of list
-    for node in list(set(used_nodes)):
-        # note the total attack volume it is relaying
-        remaining = G.nodes[node]["attack_vol"]
 
-        if remaining != 0: #TODO very rarely, this value is 0 and causes a division through 0 error,; dont understand how it happens
-            # note all its outward pointing edges that are used for carrying attack traffic
-            # and the corresponding nodes with their total incoming attack traffic
-            outward_flows = [(G.nodes[v]["attack_vol"], (u, v)) for u, v in G.out_edges(node) if (u, v) in list(set(used_edges_simple))]
-            # sort this from small to large by attack volumes
-            outward_flows_sorted = sorted(outward_flows)
-            # go through each next hop and calculate the percentage of traffic flowing their
-            for next_hop_volume, (u, v) in outward_flows_sorted:
-                G[u][v]["split_perc"] = min(next_hop_volume/G.nodes[node]["attack_vol"], remaining/G.nodes[node]["attack_vol"])
-                remaining -= next_hop_volume
-    return G
+    # calculate the edges that are on the attack path in the modified graph
+    attack_flows_modified = list(nx.all_simple_paths(G_modified, source, victim))
+    for ally in allies:
+        attack_flows_modified += list(nx.all_simple_paths(G_modified, source, ally))
+    for attack_flow in attack_flows_modified:
+        for edge in zip(attack_flow[:-1], attack_flow[1:]):
+            attack_path_edges_modified.append(edge)
+    nr_edges_attack_flow_modified = len(set(attack_path_edges_modified))
+
+    cost_path_length = step_cost * (nr_edges_attack_flow_modified - nr_edges_attack_flow_original)
+
+    return cost_change + cost_path_length

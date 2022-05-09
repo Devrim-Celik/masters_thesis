@@ -16,7 +16,7 @@ sys.path.insert(0, '..') # TODO is this smart ??? is there a better way
 
 from main import run_experiment
 
-NR_TEST_EXECUTIONS = 100
+NR_EXECUTIONS_PER_TEST = 100
 
 @pytest.fixture
 def generate_random_setup():
@@ -26,7 +26,6 @@ def generate_random_setup():
 	:return: a tuple containing three ints and a list (in this order):
 		* number of ASes
 		* number of allies
-		* mode, either complete or greedy
 		* attack volume
 		* scrubbing capabilities of the allies
 	:rtype: tuple
@@ -34,14 +33,14 @@ def generate_random_setup():
 
 	nr_ASes = random.randint(100, 500)
 	nr_allies = random.randint(1, 5)
-	mode = random.choice(["complete", "greedy"])
 	attack_volume = random.randint(50, 500)
-	ally_scrubbing_capabilites = [random.randint(1, int(attack_volume/nr_allies)) for _ in range(nr_allies)]
-	return (nr_ASes, nr_allies, mode, attack_volume, ally_scrubbing_capabilites)
+	ally_scrubbing_capabilites = [random.randint(2, int(attack_volume/nr_allies)) - 1 for _ in range(nr_allies)]
+	return (nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites)
 
 
-@pytest.mark.repeat(NR_TEST_EXECUTIONS)
+@pytest.mark.repeat(NR_EXECUTIONS_PER_TEST)
 def test_connectivity(
+	mode:str,
 	generate_random_setup:Callable
 	):
 	"""
@@ -55,23 +54,24 @@ def test_connectivity(
 	"""
 
 	# generate a random setup
-	nr_ASes, nr_allies, mode, attack_volume, ally_scrubbing_capabilites = generate_random_setup
+	nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites = generate_random_setup
 
 	# run a test, using a random setup and without saving the data
-	data_dict = run_experiment(f"central_controller_{mode}", nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites, False, False)
+	data_dict = run_experiment(mode, nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites, False, False)
 
 
 	# test if each node (that is not a sink itself) has either the victim or the allies in their descendants
 	sinks = [data_dict["victim"]] + data_dict["allies"]
-	G = data_dict["G_with_splits_colored"]
+	G = data_dict["G_modified_colored"]
 	for node in list(G.nodes):
 		if (not node in sinks) and (not set(list(nx.descendants(G, node))) & set(sinks)):
 			assert False
 	assert True
 
 
-@pytest.mark.repeat(NR_TEST_EXECUTIONS)
+@pytest.mark.repeat(NR_EXECUTIONS_PER_TEST)
 def test_reachability_sinks_from_adv(
+	mode:str,
 	generate_random_setup:Callable
 	):
 	"""
@@ -85,21 +85,22 @@ def test_reachability_sinks_from_adv(
 	"""
 
 	# generate a random setup
-	nr_ASes, nr_allies, mode, attack_volume, ally_scrubbing_capabilites = generate_random_setup
+	nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites = generate_random_setup
 
 	# run a test, using a random setup and without saving the data
-	data_dict = run_experiment(f"central_controller_{mode}", nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites, False, False)
+	data_dict = run_experiment(mode, nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites, False, False)
 
 	# test if all sinks (allies and victim) can be reached from the adversary
 	sinks = [data_dict["victim"]] + data_dict["allies"]
-	G = data_dict["G_with_splits_colored"]
+	G = data_dict["G_modified_colored"]
 	adv_desc = list(nx.descendants(G, data_dict["adversary"]))
 
 	assert len(set(adv_desc) & set(sinks)) == len(sinks)
 
 
-@pytest.mark.repeat(NR_TEST_EXECUTIONS)
+@pytest.mark.repeat(NR_EXECUTIONS_PER_TEST)
 def test_correctness_of_changed_edges(
+	mode:str,
 	generate_random_setup:Callable
 	):
 	"""
@@ -114,16 +115,16 @@ def test_correctness_of_changed_edges(
 	"""
 
 	# generate a random setup
-	nr_ASes, nr_allies, mode, attack_volume, ally_scrubbing_capabilites = generate_random_setup
+	nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites = generate_random_setup
 
 	# run a test, using a random setup and without saving the data
-	data_dict = run_experiment(f"central_controller_{mode}", nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites, False, False)
+	data_dict = run_experiment(mode, nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites, False, False)
 
 	# for all edges in the resulting graph, check whether they (or their reversed form) are contained in the original 
 	# graph and that no edges were added/deleted
 	# 	first collect all original and changed edges
 	edges_init = list(data_dict["G_pruned"].edges)
-	edges_changed = list(data_dict["G_with_splits_colored"].edges)
+	edges_changed = list(data_dict["G_modified_colored"].edges)
 
 	# for checking that no edges were delted/added
 	same_number_of_edges = len(edges_init) == len(edges_changed)
@@ -133,8 +134,9 @@ def test_correctness_of_changed_edges(
 	assert same_number_of_edges & only_original_or_reversed
 
 
-@pytest.mark.repeat(NR_TEST_EXECUTIONS)
+@pytest.mark.repeat(NR_EXECUTIONS_PER_TEST)
 def test_distribution_of_attack_flow(
+	mode:str,
 	generate_random_setup:Callable
 	):
 	"""
@@ -152,10 +154,10 @@ def test_distribution_of_attack_flow(
 	"""
 
 	# generate a random setup
-	nr_ASes, nr_allies, mode, attack_volume, ally_scrubbing_capabilites = generate_random_setup
+	nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites = generate_random_setup
 
 	# run a test, using a random setup and without saving the data
-	data_dict = run_experiment(f"central_controller_{mode}", nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites, False, False)
+	data_dict = run_experiment(mode, nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites, False, False)
 	### for each node, note the amount of attack traffic it is supposed to receive
 	### this is our "goal"
 	expected_attack_traffic = [0 for _ in range(nr_ASes)]
@@ -164,7 +166,7 @@ def test_distribution_of_attack_flow(
 		expected_attack_traffic[ally] = ally_capabilities
 
 	### calculate how much each node actually received
-	G = data_dict["G_with_splits_colored"]
+	G = data_dict["G_modified_colored"]
 	received_attack_traffic = [0 for _ in range(nr_ASes)]
 	received_attack_traffic[data_dict["adversary"]] = attack_volume
 	
