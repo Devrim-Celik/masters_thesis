@@ -58,7 +58,7 @@ where
 - `ally_scrubbing_capabilities` (list): determines the scrubbing capabilities of the allies in Gbps
 - `verbose_enabled`: whether to print information about saved and loaded files
 
-** Example **
+**Example**
 ```
 $ python3 main.py --mode central_controller_greedy --nr_ASes=780 --nr_allies 3 --attack_volume 500 --ally_scrubbing_capabilities 100 50 110 --verbose_enabled
 ```
