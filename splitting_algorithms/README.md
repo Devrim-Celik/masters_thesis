@@ -42,21 +42,21 @@ A new graph `G' = (V, E')` where all edges `E'` are either in `E` or where their
 ## Usage
 
 ##### `main.py`
-Executing `main.py` will run one experiment in which
-	1. a random AS network graph is generated,
-	2. a victim, a DDoS source, and a set of allies is randomly selected, and
-	3. the graph is modified such that all allies are reachable from the source, with the minimal amount of changes.
+Executing `main.py` will run one experiment in which  
+1. a random AS network graph is generated,  
+2. a victim, a DDoS source, and a set of allies is randomly selected, and  
+3. the graph is modified such that all allies are reachable from the source, with the minimal amount of changes.  
 To execute, simpy run
 ```
 $ python3 main.py [--mode={"central_controller_complete", "central_controller_greedy", "decentralized", "bgp"}, default="central_controller_complete"] [--nr_ASes=NR_ASES, default=500] [--nr_allies=NR_ALLIES, default=4] [--attack_volume=ATTACK_VOLUME, default=1000] [--ally_scrubbing_capabilities=ALLY_SCRUBBING_CAPABILITIES, default=[150, 300, 40, 120]] [--verbose_enabled]
 ```
 where  
-* `mode` (str): determines the type of algorithm to execute
-* `nr_ASes` (int): determines the number of ASes in the generated random graph
-* `nr_allies` (int): determines the number of allies
-* `attack_volume` (int): determine the attack volume of the DDoS attack in Gbps
-* `ally_scrubbing_capabilities` (list): determines the scrubbing capabilities of the allies in Gbps
-* `verbose_enabled`: whether to print information about saved and loaded files
+- `mode` (str): determines the type of algorithm to execute
+- `nr_ASes` (int): determines the number of ASes in the generated random graph
+- `nr_allies` (int): determines the number of allies
+- `attack_volume` (int): determine the attack volume of the DDoS attack in Gbps
+- `ally_scrubbing_capabilities` (list): determines the scrubbing capabilities of the allies in Gbps
+- `verbose_enabled`: whether to print information about saved and loaded files
 
 ** Example **
 ```
@@ -73,10 +73,10 @@ To execute, simpy run
 $ python3 algorithms_comparison.py [--nr_ASes=NR_ASES, default=500] [--max_allies=MAX_ALLIES, default=7] [--nr_executions=NR_EXECUTIONS, default=3] [--verbose_enabled]
 ```
 where
-* `nr_ASes` (int): determines the number of ASes in the generated random graphs
-* `max_allies` (int): determines the number of the maximum amount of allies used in scenarios
-* `nr_executions` (int): determine the number of times each scenario is tested on, in order to obtain a variance measure for the associated costs
-* `verbose_enabled`: whether to print information about saved and loaded files
+- `nr_ASes` (int): determines the number of ASes in the generated random graphs
+- `max_allies` (int): determines the number of the maximum amount of allies used in scenarios
+- `nr_executions` (int): determine the number of times each scenario is tested on, in order to obtain a variance measure for the associated costs
+- `verbose_enabled`: whether to print information about saved and loaded files
 
 **Example**
 ```
@@ -95,7 +95,7 @@ simply change directory to `tests` and execute
 $ pytest --mode [ALGORITHM_TYPE]
 ```
 to run all tests on the supplied algorithm type, where `ALGORITHM_TYPE` is either  
-* `central_controller_complete`,  
-* `central_controller_greedy`, or   
-* `decentralized`.   
+- `central_controller_complete`,  
+- `central_controller_greedy`, or   
+- `decentralized`.   
 If no `mode` is supplied, the default mode is `central_controller_complete`.
