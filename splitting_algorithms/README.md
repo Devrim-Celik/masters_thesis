@@ -31,7 +31,7 @@ A new graph `G' = (V, E')` where all edges `E'` are either in `E` or where their
 	- `test_initial_graph.py`: contains test suites for validating the correctness of the initial graph generation function in `generate_AS_network.py`
 	- `test_results.py`: contains test suites for validating the correctness of the result of the optimization algorithm described in `split_merge.py`
 
-## Running Test Suites
+## Testing
 After having installed the `pytest` package through
 ```
 $ pip3 install pytest

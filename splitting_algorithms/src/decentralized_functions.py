@@ -1,3 +1,11 @@
+"""
+Contains functions that implemented the algorithm to generate minimal changes
+on an input graph such that attack traffic can be diverted to allies of the victim,
+using a decentralized setting.
+
+Author:
+    Devrim Celik - 05.05.2022
+"""
 
 
 
@@ -11,7 +19,8 @@ def reachable_by_source(
     allies:list
     ):
     """
-    TODO.
+    This function will determine the set of all nodes that are reachable by the source
+    of the DDoS traffic through graph traversion.
     
     
     :param initial_Graph: graph
@@ -25,7 +34,7 @@ def reachable_by_source(
     :type allies: list
 
     :return: all nodes reachable from the source, except for the victim and allies
-    :rtype: tuple
+    :rtype: list
     """
     
     # for recording nodes
@@ -97,6 +106,28 @@ def decentralized(
     ally_scrubbing_capabilities:list,
     attack_volume:int
     ):
+    """
+    This function implements a decentralized algorithm (in nature) to solve the 
+    diverting problem.
+
+    :param initial_Graph: the initial AS network graph
+    :param victim: the victim node
+    :param source: the node that is the source of the DDoS attack traffic
+    :param allies: the list of ally nodes
+    :param ally_scrubbing_capabilities: the list of the scrubbing capabilities of the allies
+    :param attack_volume: the attack volume
+
+    :type initial_Graph: nx.classes.graph.Graph
+    :type victim: int
+    :type source: int
+    :type allies: list
+    :type ally_scrubbing_capabilities: list
+    :type attack_volume: int
+
+    :return: the modified graph that is now diverting DDoS traffic to allies
+    :rtype: nx.classes.graph.Graph
+    """
+
 
     graph = initial_Graph.copy()
     undirected_graph = initial_Graph.to_undirected()

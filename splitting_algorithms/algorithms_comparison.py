@@ -1,3 +1,10 @@
+"""
+This file is used compare the cost between all available algorithms, for different amount of allies.
+
+Author:
+    Devrim Celik - 07.05.2022
+"""
+
 
 from pathlib import Path
 from datetime import datetime
@@ -21,44 +28,34 @@ def run_comparison(
 	nr_ASes:int = 400,
 	nr_allies_list:int = list(range(1,8)),
 	nr_executions:int = 4,
-	experiment_path:str = "./experiments",
 	step_cost:int = 1,
-	entry_change_cost:int = 3,
-	verbose:bool = True,
+	router_entry_change_cost:int = 3,
+	experiment_path:str = "./experiments",
+	verbose:bool = True
 	):
 	"""
-	This function generates a random graph with a victim, and adversary and multipler allies for the
-	victim, representing an autonomous system network. It then tries to modify the graph as little
-	as possible, in order to divert some of the attack traffic to all the allies.
-	The way in which the problem is solved can be selected.
+	This function will generate AS network topologies, with variyng amounts of available allies,
+	and run all available algorithms and note the costs to compare them in a graph.
 
-	:param mode: defines the way in which the problem is solved; options are
-		* `central_controller_complete`
-		* `central_controller_greedy`
-		* `decentralized`
-		* `bgp`
 	:param nr_ASes: the number of ASes int he graph
 	:param nr_allies: the number of allies
-	:param attack_volume: the attack volume of the DDoS adversary
-	:param ally_scrubbing_capabilities: a list of scrubbing capabilities
-	:param save_data: whether to save the generated data 
-	:param save_html: whether to save html figures of the generated graphs
-	:param experiment_path: where to save data and figures
-	:param seed: a random seed
+	:param nr_executions: number of executions per setting; used to obtain cost variance
+	:param step_cost: for the cost function 
+	:param router_entry_change_cost: for the cost function
+	:param experiment_path: where to save data and figure
+	:param verbose: verbose option
 
-	:param mode: str
-	:param nr_ASes: int
-	:param nr_allies: int
-	:param attack_volume: int 
-	:param ally_scrubbing_capabilities: list
-	:param save_data: str
-	:param save_html: str
-	:param experiment_path: str
-	:param seed: int
+	:type mode: str
+	:type nr_ASes: int
+	:type nr_executions: int
+	:type step_cost: int
+	:type router_entry_change_cost: int
+	:type experiment_path: str 
+	:type verbose: bool
 
 
-	:return: all the data generated in this function
-	:type path_to_pickle: dict
+	:return: the recorded costs
+	:rtype: pd.DataFrame
 	"""
 
 	# set some arbitrary attack_volume
@@ -88,7 +85,7 @@ def run_comparison(
 			# one type of algorithm each iteration
 			for mode in ALGORITHMS.keys():
 				G_modified = ALGORITHMS[mode](G_pruned, victim, adversary, allies, ally_scrubbing_capabilities, attack_volume)
-				cost = cost_function(G_pruned, G_modified, victim, adversary, allies, step_cost, entry_change_cost)
+				cost = cost_function(G_pruned, G_modified, victim, adversary, allies, step_cost, router_entry_change_cost)
 
 				# save the cost from the cost function
 				comparison_results.append({

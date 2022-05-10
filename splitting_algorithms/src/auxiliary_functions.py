@@ -26,9 +26,11 @@ def save_as_pickle(
 
     :param object_to_pickle: the Python to be pickles
     :param path_to_pickle: path specifying where to save the pickle file
+    :param verbose: verbose option
 
     :type object_to_pickle: object
     :type path_to_pickle: str
+    :type verbose: bool
     """
 
     with open(path_to_pickle, 'wb') as handle:
@@ -46,8 +48,10 @@ def load_pickle(
     Reads Python pickle from file.
 
     :param path_to_pickle: path specifying where pickle file is saved
+    :param verbose: verbose option
 
     :type path_to_pickle: str
+    :type verbose: bool
 
     :return: the unpickled Python object
     :rtype: object
@@ -98,9 +102,11 @@ def save_pyvis_network(
 
     :param Graph: the networkx Graph
     :param html_path: path specifying where to save the html figure
+    :param verbose: verbose option
 
     :type Graph: nx.classes.graph.Graph
     :type html_path: str
+    :type verbose: bool
     """
 
     net = gen_pyvis_network(Graph)
@@ -109,14 +115,36 @@ def save_pyvis_network(
     if verbose:
         print(f"[+] Saved Graph to \"{html_path}\".")
 
+
 def comparison_plot(
     comparison_results_df:pd.DataFrame,
     figure_path:str,
     nr_ASes:int,
     nr_executions:int,
     figure_size:tuple = (16, 10),
-    alpha:float = 0.8
+    alpha:float = 0.8,
+    verbose:bool = False
     ):
+    """
+    Used by `run_comparison`, this function uses the recorded cost data of different
+    algorithms to generate a line plot to compare their performances.
+
+    :param comparison_results_df: the recorded cost data
+    :param figure_path: where to save the lineplot
+    :param nr_ASes: number of ASes in the used graphs
+    :param nr_executions: number of executions per comparison setting
+    :param figure_size: size of the generated figure
+    :param alpha: the opacity of the displayed lines
+    :param verbose: verbose option
+
+    :type comparison_results_df: pd.DataFrame
+    :type figure_path: str
+    :type nr_ASes: int
+    :type nr_executions: int
+    :type figure_size: tuple
+    :type alpha: float
+    :type verbose: bool
+    """
 
     plt.figure(figsize = figure_size)
     sns.lineplot(
@@ -129,7 +157,10 @@ def comparison_plot(
     plt.legend(loc = 'upper left')
 
     plt.savefig(figure_path)
-    print(f"[+] Saved to \"{figure_path}\".")
+    
+    if verbose:
+        print(f"[+] Saved to \"{figure_path}\".")
+
 
 def assign_attributes(
     Graph:nx.classes.graph.Graph, 
@@ -276,14 +307,39 @@ def cost_function(
     victim:int,
     source:int,
     allies:list,
-    step_cost:int,
-    router_entry_change_cost:int
+    step_cost:float,
+    router_entry_change_cost:float
     ):
+    """
+    This function implements a cost function, that compares the cost for the modifictions
+    of the original graph.
+    
+    :param G_original: the original AS network topology
+    :param G_modified: the modified AS network topology
+    :param victim: the victim node in the graph
+    :param source: the source of the DDoS attack traffic
+    :param allies: ally nodes to the victim
+    :param step_cost: the cost for each hop the attack traffic flows after
+        having split from the original attack path
+    :param router_entry_change_cost: cost for "manually" changing a single
+        entry in a routers BGP routing table
 
+    :type G_original: nx.classes.graph.Graph
+    :type G_modified: nx.classes.graph.Graph
+    :type victim: int
+    :type source: int
+    :type allies: list
+    :type step_cost: float
+    :type router_entry_change_cost: float
+
+    :return: the cost of the modifications
+    :rytpe: int
+    """
 
     ###########################################################################
     # part 1 of cost function: count the number of router table entry changes #
     ###########################################################################
+    # each reversion of an edge implies changing the routing table of twe BGP routers
     edge_reversions = 0
     for edge in G_original.edges:
         if not edge in G_modified.edges:
@@ -314,6 +370,7 @@ def cost_function(
             attack_path_edges_modified.append(edge)
     nr_edges_attack_flow_modified = len(set(attack_path_edges_modified))
 
+    # calculate the number of added edges on the attack flow and multipy by step_cost
     cost_path_length = step_cost * (nr_edges_attack_flow_modified - nr_edges_attack_flow_original)
 
     return cost_change + cost_path_length

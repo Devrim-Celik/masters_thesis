@@ -46,8 +46,10 @@ def test_connectivity(
 	"""
 	This function tests whether all nodes are able to reach the victim node or an ally.
 
+	:param mode: which algorithm to use
 	:param generate_random_setup: a pytest fixture that returns a tuple with a random setup
-	
+
+	:type mode: str
 	:type generate_random_setup_for_init: Callable
 
 	:raises AssertionError: raises an exception if not all nodes can reach the victim node or an ally node
@@ -77,8 +79,10 @@ def test_reachability_sinks_from_adv(
 	"""
 	This function tests whether the adversary can reach all sinks, i.e., the allies and the victim.
 
+	:param mode: which algorithm to use
 	:param generate_random_setup: a pytest fixture that returns a tuple with a random setup
-	
+
+	:type mode: str
 	:type generate_random_setup_for_init: Callable
 
 	:raises AssertionError: raises an exception if the adversary can not reach all sinks
@@ -107,8 +111,10 @@ def test_correctness_of_changed_edges(
 	This function validates that the only changes done to the original graph are the reversion 
 	of edge directions, i.e., no edges were deleted or added.
 
+	:param mode: which algorithm to use
 	:param generate_random_setup: a pytest fixture that returns a tuple with a random setup
-	
+
+	:type mode: str
 	:type generate_random_setup_for_init: Callable
 
 	:raises AssertionError: raises an exception if any other changes than edge reversions were done
@@ -134,40 +140,6 @@ def test_correctness_of_changed_edges(
 	assert same_number_of_edges & only_original_or_reversed
 
 
-def no_other_sinks(
-	mode:str,
-	generate_random_setup:Callable
-	):
-	"""
-	This function validates that the only changes done to the original graph are the reversion 
-	of edge directions, i.e., no edges were deleted or added.
-
-	:param generate_random_setup: a pytest fixture that returns a tuple with a random setup
-	
-	:type generate_random_setup_for_init: Callable
-
-	:raises AssertionError: raises an exception if any other changes than edge reversions were done
-	"""
-
-	# generate a random setup
-	nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites = generate_random_setup
-
-	# run a test, using a random setup and without saving the data
-	data_dict = run_experiment(mode, nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites, False, False)
-
-	# get the necessary values to test
-	sinks = [data_dict["victim"]] + data_dict["allies"]
-	G = data_dict["G_modified_colored"]
-
-	# go through alle dges and check that any node that does not have any outward pointing
-	# edge is one of the the expected sinks
-	for node in G.nodes:
-		if len(G.out_edges(node)) == 0 and not node in sinks:
-			assert False
-
-	assert True
-
-
 @pytest.mark.repeat(NR_EXECUTIONS_PER_TEST)
 def test_distribution_of_attack_flow(
 	mode:str,
@@ -179,8 +151,10 @@ def test_distribution_of_attack_flow(
 	that each node on the way receives and the splits along different edges (both saved as 
 	attributes in the graph) are correct.
 
+	:param mode: which algorithm to use
 	:param generate_random_setup: a pytest fixture that returns a tuple with a random setup
-	
+
+	:type mode: str
 	:type generate_random_setup_for_init: Callable
 
 	:raises AssertionError: raises an exception if the split percentages / amount of traffic received
