@@ -18,12 +18,13 @@ ALGORITHMS = {
 
 
 def run_comparison(
-	nr_ASes:int = 500,
-	nr_allies_list:int = list(range(1,11)),
-	nr_executions:int = 5,
+	nr_ASes:int = 400,
+	nr_allies_list:int = list(range(1,8)),
+	nr_executions:int = 4,
 	experiment_path:str = "./experiments",
 	step_cost:int = 1,
 	entry_change_cost:int = 3,
+	verbose:bool = True,
 	):
 	"""
 	This function generates a random graph with a victim, and adversary and multipler allies for the
@@ -107,7 +108,9 @@ def run_comparison(
 
 	# save the data 
 	comparison_results_df.to_pickle(f"{experiment_folder}/comparison_results_df.pkl")
-	print(f"[+] Saved to \"{experiment_folder}/comparison_results_df.pkl\".")
+
+	if verbose:
+		print(f"[+] Saved to \"{experiment_folder}/comparison_results_df.pkl\".")
 
 	# generate and save a plot
 	comparison_plot(

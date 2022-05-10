@@ -18,7 +18,8 @@ import seaborn as sns
 
 def save_as_pickle(
     object_to_pickle:object, 
-    path_to_pickle:str
+    path_to_pickle:str,
+    verbose:bool = False
     ):
     """
     Saves Python object as pickle.
@@ -32,11 +33,14 @@ def save_as_pickle(
 
     with open(path_to_pickle, 'wb') as handle:
         pickle.dump(object_to_pickle, handle, protocol=pickle.HIGHEST_PROTOCOL)
-    print(f"[+] Saved to \"{path_to_pickle}\".")
+
+    if verbose:
+        print(f"[+] Saved to \"{path_to_pickle}\".")
 
 
 def load_pickle(
-    path_to_pickle:str
+    path_to_pickle:str,
+    verbose:bool = False
     ):
     """
     Reads Python pickle from file.
@@ -51,7 +55,10 @@ def load_pickle(
 
     with open(path_to_pickle, 'rb') as handle:
         unpickled_object = pickle.load(handle)
-    print(f"[+] Loaded \"{path_to_pickle}\".")
+
+    if verbose:
+        print(f"[+] Loaded \"{path_to_pickle}\".")
+
     return unpickled_object
 
 
@@ -83,7 +90,8 @@ def gen_pyvis_network(
 
 def save_pyvis_network(
     Graph:nx.classes.graph.Graph, 
-    html_path:str
+    html_path:str,
+    verbose:bool = False
     ):
     """
     Saves an interactive figure of a PyVis Network as html.
@@ -97,7 +105,9 @@ def save_pyvis_network(
 
     net = gen_pyvis_network(Graph)
     net.save_graph(html_path)
-    print(f"[+] Saved Graph to \"{html_path}\".")
+
+    if verbose:
+        print(f"[+] Saved Graph to \"{html_path}\".")
 
 def comparison_plot(
     comparison_results_df:pd.DataFrame,

@@ -33,7 +33,8 @@ def run_experiment(
 	save_data:bool = True,
 	save_html:bool = True, 
 	experiment_path:str = "./experiments",
-	seed:int = None
+	seed:int = None,
+	verbose:bool = True
 	):
 	"""
 	This function generates a random graph with a victim, and adversary and multipler allies for the
@@ -135,13 +136,13 @@ def run_experiment(
 		Path(experiment_folder).mkdir(parents=True)
 
 	if save_data:
-		save_as_pickle(data_dict, experiment_folder + "/experiment_data.pkl")
+		save_as_pickle(data_dict, experiment_folder + "/experiment_data.pkl", verbose)
 	
 	if save_html:
-		save_pyvis_network(G_init, experiment_folder + "/01_initial_Graph.html")
-		save_pyvis_network(G_pruned, experiment_folder + "/02_pruned_Graph.html")
-		save_pyvis_network(G_modified, experiment_folder + "/03_modified_Graph.html")
-		save_pyvis_network(G_modified_colored, experiment_folder + "/04_modified_Graph_colored.html")
+		save_pyvis_network(G_init, experiment_folder + "/01_initial_Graph.html", verbose)
+		save_pyvis_network(G_pruned, experiment_folder + "/02_pruned_Graph.html", verbose)
+		save_pyvis_network(G_modified, experiment_folder + "/03_modified_Graph.html", verbose)
+		save_pyvis_network(G_modified_colored, experiment_folder + "/04_modified_Graph_colored.html", verbose)
 
 	return data_dict
 
