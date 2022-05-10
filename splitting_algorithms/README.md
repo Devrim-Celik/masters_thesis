@@ -19,17 +19,22 @@ We are given
 A new graph `G' = (V, E')` where all edges `E'` are either in `E` or where their reversed directions are in `E'`, such that
 	- one is able to reach all allies and the victim, when starting from `adv` by reversing some of the edges and deciding on the propotion of splits for nodes that have multiple outward pointing edges
 	- the difference between `E` and `E'` is minimized
-	- splits for the attack traffic happen as early as possible
+	- the paths towards the allies is as short as possible
 
 ## Structure of Directory
-- `main.py`: randomly generate an input setup and apply the algorithm
+- `main.py`: randomly generate an input setup and applies one of the algorithms
+- `algorithms_comparisons`: runs all algorithms on the same graph, for different setups, to compare the costs of the 
+	proposed modificiations
 - `src/`: contains the source code
-	- `auxiliary_functions.py`: contains helper functions for saving/loading data, coloring the network, generating figures, etc...
+	- `auxiliary_functions.py`: contains helper functions for saving/loading data, coloring the network, generating figures, etc... and the cost function
+	- `central_controller_function.py`: contains functions related to the central controller algorithm
+	- `decentralized_function.py`: contains functions related to the decentralized algorithm
 	- `generate_AS_network.py`: contains the code for generating an input graph 
-	- `split_merge.py`: contains the source code for the optimization algorithm
+	
 - `tests/`: contains files with test files using the `pytest` package
-	- `test_initial_graph.py`: contains test suites for validating the correctness of the initial graph generation function in `generate_AS_network.py`
-	- `test_results.py`: contains test suites for validating the correctness of the result of the optimization algorithm described in `split_merge.py`
+	- `test_algorithms.py`: contains test suites for validating the correctness of the proposed modifications of the algorithms
+	- `test_graph._generation.py`: contains test suites for validating the correctness of the initial graph generation function in `generate_AS_network.py`
+
 
 ## Testing
 After having installed the `pytest` package through
@@ -38,5 +43,10 @@ $ pip3 install pytest
 ```
 simply change directory to `tests` and execute
 ```
-$ pytest
+$ pytest --mode [ALGORITHM_TYPE]
 ```
+to run all tests on the supplied algorithm type, where `ALGORITHM_TYPE` is either
+	- `central_controller_complete`,
+	- `central_controller_greedy`, or
+	- `decentralized`.
+If no `mode` is supplied, the default mode is `central_controller_complete`.

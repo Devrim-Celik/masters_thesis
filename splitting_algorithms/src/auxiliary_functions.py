@@ -3,6 +3,7 @@ Contains auxiliary functions used to
     * save to / read from pickle files
     * vizualize graphs and save those vizualisations as html files
     * colors graphs
+    * assess the cost of a proposed modification of an algorithm
 
 Author:
     Devrim Celik - 01.05.2022

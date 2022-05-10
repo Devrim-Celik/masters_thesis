@@ -36,11 +36,11 @@
 * verbose option for printing saving and loading [TODO]
 * new test -> make sure that there exists no other endgoals for traffic except for victim (and allies for modified graph) [TODO -> but then deleted; this is implicitly tested by `test_connectivity`]
 * comment [TODO]
+* update readme [TODO]
 
 ============================================================================================================
 ==================> TODO
 * add splits to decentralized
-* update readme
 * do we even want unwanted_change_cost?
 
 ============================================================================================================
