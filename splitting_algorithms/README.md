@@ -83,6 +83,9 @@ where
 $ python3 algorithms_comparison.py --nr_ASes=780 --max_allies 6 --nr_executions 4 --verbose_enabled
 ```
 
+![Example Comparison Figure]{https://github.com/Devrim-Celik/masters_thesis/blob/master/splitting_algorithms/readme_figures/README_comparison_plot.png}
+
+
 ---
 
 ## Testing
