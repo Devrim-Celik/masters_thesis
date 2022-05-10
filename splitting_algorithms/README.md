@@ -64,10 +64,10 @@ $ python3 main.py --mode central_controller_greedy --nr_ASes=780 --nr_allies 3 -
 ```
 
 ##### `algorithms_comparison.py`
-Executing `algorithms_comparison.py` will run one experiment in which
-	1. multiple random graphs are generated with different amount of allies,
-	2. each available algorithm is tested multiple times on these different setups, and
-	3. the associated costs for the proposed modifications to the graph is saved, and displayed in a figure.
+Executing `algorithms_comparison.py` will run one experiment in which  
+1. multiple random graphs are generated with different amount of allies,  
+2. each available algorithm is tested multiple times on these different setups, and  
+3. the associated costs for the proposed modifications to the graph is saved, and displayed in a figure.  
 To execute, simpy run
 ```
 $ python3 algorithms_comparison.py [--nr_ASes=NR_ASES, default=500] [--max_allies=MAX_ALLIES, default=7] [--nr_executions=NR_EXECUTIONS, default=3] [--verbose_enabled]
@@ -96,6 +96,6 @@ $ pytest --mode [ALGORITHM_TYPE]
 ```
 to run all tests on the supplied algorithm type, where `ALGORITHM_TYPE` is either  
 * `central_controller_complete`,  
-* `central_controller_greedy`, or 
-* `decentralized`.  
+* `central_controller_greedy`, or   
+* `decentralized`.   
 If no `mode` is supplied, the default mode is `central_controller_complete`.
