@@ -78,7 +78,7 @@ where
 * `nr_executions` (int): determine the number of times each scenario is tested on, in order to obtain a variance measure for the associated costs
 * `verbose_enabled`: whether to print information about saved and loaded files
 
-** Example **
+**Example**
 ```
 $ python3 algorithms_comparison.py --nr_ASes=780 --max_allies 6 --nr_executions 4 --verbose_enabled
 ```
