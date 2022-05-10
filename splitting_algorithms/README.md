@@ -95,7 +95,7 @@ simply change directory to `tests` and execute
 $ pytest --mode [ALGORITHM_TYPE]
 ```
 to run all tests on the supplied algorithm type, where `ALGORITHM_TYPE` is either  
-	* `central_controller_complete`,  
-	* `central_controller_greedy`, or 
-	* `decentralized`.  
+* `central_controller_complete`,  
+* `central_controller_greedy`, or 
+* `decentralized`.  
 If no `mode` is supplied, the default mode is `central_controller_complete`.
