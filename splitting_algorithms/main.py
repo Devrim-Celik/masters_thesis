@@ -11,6 +11,7 @@ Author:
 import random
 from pathlib import Path
 from datetime import datetime
+import argparse
 
 from src.generate_AS_network import generate_directed_AS_graph, graph_pruning_via_BFS
 from src.auxiliary_functions import save_pyvis_network, save_as_pickle, color_graph, cost_function
@@ -34,7 +35,7 @@ def run_experiment(
 	save_html:bool = True, 
 	experiment_path:str = "./experiments",
 	seed:int = None,
-	verbose:bool = True
+	verbose:bool = False
 	):
 	"""
 	This function generates a random graph with a victim, and adversary and multipler allies for the
@@ -149,4 +150,22 @@ def run_experiment(
 	return data_dict
 
 if __name__=="__main__":
-	run_experiment("decentralized")
+
+	# argument parsing
+	parser = argparse.ArgumentParser()
+	parser.add_argument("--mode", type = str, default = "central_controller_complete", help = "algorithm to execute")
+	parser.add_argument("--nr_ASes", type = int, default = 500, help = "number of ASes in simulations")
+	parser.add_argument("--nr_allies", type = int, default = 4, help = "number of allies")
+	parser.add_argument("--attack_volume", type = int, default = 1000, help = "attack volume in Gbps")
+	parser.add_argument("--ally_scrubbing_capabilities", type = int, nargs='+', default = [150, 300, 40, 120], help = "list of scrubbing capabilities of allies in Gbps")
+	parser.add_argument("--verbose_enabled", action='store_true', help = "enabling verbose")
+	args = parser.parse_args()
+
+	run_experiment(
+		mode = args.mode,
+		nr_ASes = args.nr_ASes,
+		nr_allies = args.nr_allies,
+		attack_volume = args.attack_volume,
+		ally_scrubbing_capabilities = args.ally_scrubbing_capabilities,
+		verbose = args.verbose_enabled
+		)

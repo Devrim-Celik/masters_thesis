@@ -50,7 +50,7 @@ def generate_G_prime(
     attack_flows = list(nx.all_simple_paths(G, source, victim))
     for flow in attack_flows:
         for u, v in zip(flow[:-1], flow[1:]):
-            G[u][v]["weight"] = step_cost
+            G[u][v]["weight"] = 0 # TODO step_cost or 0? I think 0 makes more sense since these edges are sued anyways.
             G[u][v]["on_attack_path"] = True
             G[u][v]["added"] = False
 

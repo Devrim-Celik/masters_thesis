@@ -10,6 +10,7 @@ from pathlib import Path
 from datetime import datetime
 import pandas as pd
 from tqdm import tqdm
+import argparse
 
 from src.generate_AS_network import generate_directed_AS_graph, graph_pruning_via_BFS
 from src.auxiliary_functions import comparison_plot, cost_function
@@ -120,4 +121,18 @@ def run_comparison(
 	return comparison_results_df
 
 if __name__=="__main__":
-	run_comparison()
+
+	# argument parsing
+	parser = argparse.ArgumentParser()
+	parser.add_argument("--nr_ASes", type = int, default = 500, help = "number of ASes in simulations")
+	parser.add_argument("--max_allies", type = int, default = 7, help = "max number of allies to iterate to")
+	parser.add_argument("--nr_executions", type = int, default = 3, help = "number of executions per simulation")
+	parser.add_argument("--verbose_enabled", action='store_true', help = "enabling verbose")
+	args = parser.parse_args()
+
+	run_comparison(
+		nr_ASes = args.nr_ASes,
+		nr_allies_list = list(range(1, args.max_allies + 1)),
+		nr_executions = args.nr_executions,
+		verbose = args.verbose_enabled
+		)
