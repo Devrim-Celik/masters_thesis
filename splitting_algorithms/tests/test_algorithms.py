@@ -16,7 +16,7 @@ sys.path.insert(0, '..') # TODO is this smart ??? is there a better way
 
 from main import run_experiment
 
-NR_EXECUTIONS_PER_TEST = 100
+NR_EXECUTIONS_PER_TEST = 25
 
 @pytest.fixture
 def generate_random_setup():
@@ -132,6 +132,40 @@ def test_correctness_of_changed_edges(
 	only_original_or_reversed = all([((u, v) in edges_init) | ((v, u) in edges_init) for u, v in edges_changed])
 
 	assert same_number_of_edges & only_original_or_reversed
+
+
+def no_other_sinks(
+	mode:str,
+	generate_random_setup:Callable
+	):
+	"""
+	This function validates that the only changes done to the original graph are the reversion 
+	of edge directions, i.e., no edges were deleted or added.
+
+	:param generate_random_setup: a pytest fixture that returns a tuple with a random setup
+	
+	:type generate_random_setup_for_init: Callable
+
+	:raises AssertionError: raises an exception if any other changes than edge reversions were done
+	"""
+
+	# generate a random setup
+	nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites = generate_random_setup
+
+	# run a test, using a random setup and without saving the data
+	data_dict = run_experiment(mode, nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites, False, False)
+
+	# get the necessary values to test
+	sinks = [data_dict["victim"]] + data_dict["allies"]
+	G = data_dict["G_modified_colored"]
+
+	# go through alle dges and check that any node that does not have any outward pointing
+	# edge is one of the the expected sinks
+	for node in G.nodes:
+		if len(G.out_edges(node)) == 0 and not node in sinks:
+			assert False
+
+	assert True
 
 
 @pytest.mark.repeat(NR_EXECUTIONS_PER_TEST)
