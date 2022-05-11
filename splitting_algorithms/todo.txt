@@ -38,12 +38,13 @@
 * comment [TODO]
 * update readme [TODO]
 * argparse [TODO]
+* add comparison graph and input & modified graph html [TODO, but used screenshot]
 
 ============================================================================================================
 ==================> TODO
 * add splits to decentralized
 * do we even want unwanted_change_cost?
-* add comparison graph and input & modified graph html
+
 
 ============================================================================================================
 ==================> RARE TEST ERRORS TO FIX
