@@ -63,6 +63,8 @@ where
 $ python3 main.py --mode central_controller_greedy --nr_ASes=780 --nr_allies 3 --attack_volume 500 --ally_scrubbing_capabilities 100 50 110 --verbose_enabled
 ```
 
+[Modified Graph with Color Coding](https://github.com/Devrim-Celik/masters_thesis/blob/master/splitting_algorithms/readme_figures/README_04_modified_Graph_colored.html)
+
 ##### `algorithms_comparison.py`
 Executing `algorithms_comparison.py` will run one experiment in which  
 1. multiple random graphs are generated with different amount of allies,  
@@ -83,7 +85,7 @@ where
 $ python3 algorithms_comparison.py --nr_ASes=780 --max_allies 6 --nr_executions 4 --verbose_enabled
 ```
 
-![Example Comparison Figure]{https://github.com/Devrim-Celik/masters_thesis/blob/master/splitting_algorithms/readme_figures/README_comparison_plot.png }
+![Example Comparison Figure](https://github.com/Devrim-Celik/masters_thesis/blob/master/splitting_algorithms/readme_figures/README_comparison_plot.png)
 
 
 ---
