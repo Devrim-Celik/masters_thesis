@@ -63,7 +63,7 @@ where
 $ python3 main.py --mode central_controller_greedy --nr_ASes=780 --nr_allies 3 --attack_volume 500 --ally_scrubbing_capabilities 100 50 110 --verbose_enabled
 ```
 
-[Modified Graph with Color Coding](https://github.com/Devrim-Celik/masters_thesis/blob/master/splitting_algorithms/readme_figures/README_04_modified_Graph_colored.html)
+[Modified Graph with Color Coding](https://github.com/Devrim-Celik/masters_thesis/blob/master/splitting_algorithms/readme_figures/README_modified_graph_figure.png)
 
 ##### `algorithms_comparison.py`
 Executing `algorithms_comparison.py` will run one experiment in which  
