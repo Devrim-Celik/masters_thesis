@@ -116,7 +116,8 @@ def generate_directed_AS_graph(
 
 def graph_pruning_via_BFS(
     Graph:nx.classes.graph.Graph,
-    victim:int
+    victim:int,
+    max_out_edges:int = 1
 ):
     """
     Prunes a graph, by considering all outward pointing edges of every node,
@@ -125,9 +126,11 @@ def graph_pruning_via_BFS(
 
     :param Graph: undirected networkx graph, reprsenting AS network
     :param victim: victim node
+    :param max_out_edges: max number of outward pointing edges a node may habe
 
     :type G_init: nx.classes.graph.Graph
     :type victim: int
+    :type max_out_edges: int
 
     :return: pruned graph
     :rytpe: nx.classes.graph.Graph
@@ -159,5 +162,13 @@ def graph_pruning_via_BFS(
             u, v = outward_edges[delete_indx]
             G_pruned.remove_edge(u, v)
             nr_edges_pruned += 1
-                   
+
+        # then, if it is still move than max_out_edges, remove the appropriate amount of edges
+        outward_edges = list(G_pruned.out_edges(node))
+        if len(outward_edges) > max_out_edges:
+            to_delete = random.sample(outward_edges, len(outward_edges) - max_out_edges)
+            for u, v in to_delete:
+                G_pruned.remove_edge(u, v)
+                nr_edges_pruned += 1
+
     return G_pruned
