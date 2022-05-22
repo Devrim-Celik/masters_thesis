@@ -288,17 +288,15 @@ def color_graph(
     special_nodes = [adversary, victim, *allies]
     
     # set the default attack volume for all nodes and edges
-    for node in Graph.nodes:
-        if Graph.nodes[node]["attack_vol"] != 0 and not node in special_nodes:
-            # decide if the node on the path is actually splitting:
-            if len(list(Graph.out_edges(node))) > 1:
-                Graph.nodes[node]["color"] = splitting_color
-            else:
-                Graph.nodes[node]["color"] = non_splitting_node_color
     for u, v in Graph.edges:
-        if Graph[u][v]["split_perc"] != 0:
+        if "split_perc" in Graph[u][v].keys() and Graph[u][v]["split_perc"] != 0:
             Graph[u][v]["color"] = splitting_color
 
+            if not u in special_nodes:
+                if round(Graph[u][v]["split_perc"]) == 1:
+                    Graph.nodes[u]["color"] = non_splitting_node_color
+                else:
+                    Graph.nodes[u]["color"] = splitting_color
     return Graph
 
 

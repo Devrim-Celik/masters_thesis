@@ -172,3 +172,41 @@ def graph_pruning_via_BFS(
                 nr_edges_pruned += 1
 
     return G_pruned
+
+
+def denote_original_intermediate_attack_nodes(
+    G_init:nx.classes.graph.Graph,
+    victim:int,
+    source:int
+    ):
+    """
+    This function will determine the actual path the attack traffic will take, given
+    that there might be multiple paths from DDoS source to the victim.
+
+    :param G_init: undirected networkx graph, reprsenting AS network
+    :param victim: victim node
+    :param source: the node representing the source of the attack traffic
+
+    :type G_init: nx.classes.graph.Graph
+    :type victim: int
+    :type source: int
+
+    :return: graph with boolean attribute "on_attack_path"
+    :rytpe: nx.classes.graph.Graph
+    """
+
+
+    G = G_init.copy()
+
+    # set an attributes
+    for node in G.nodes:
+        G.nodes[node]["on_attack_path"] = False
+
+    # from all paths from source to victim, determine the shortest path
+    intermediate_att_nodes = list(nx.shortest_simple_paths(G, source, victim))[0]
+
+    # go through those nodes, and denote that they are on attack path
+    for node in intermediate_att_nodes:
+        G.nodes[node]["on_attack_path"] = True
+
+    return G

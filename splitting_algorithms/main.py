@@ -13,7 +13,7 @@ from pathlib import Path
 from datetime import datetime
 import argparse
 
-from src.generate_AS_network import generate_directed_AS_graph, graph_pruning_via_BFS
+from src.generate_AS_network import generate_directed_AS_graph, graph_pruning_via_BFS, denote_original_intermediate_attack_nodes
 from src.auxiliary_functions import save_pyvis_network, save_as_pickle, color_graph, cost_function
 from src.central_controller_functions import central_controller_complete, central_controller_greedy
 from src.decentralized_functions import decentralized
@@ -100,11 +100,13 @@ def run_experiment(
 	# prune some edges of it
 	G_pruned = graph_pruning_via_BFS(G_init, victim)
 
-	
+	# note the nodes that are on the attack path
+	G_pruned_noted = denote_original_intermediate_attack_nodes(G_pruned, victim, adversary)
+
 	#######################################################
 	############## ALGORITHM AND SPLITTING TRAFFIC CALCULATIONS
 	#######################################################
-	G_modified = ALGORITHMS[mode](G_pruned, victim, adversary, allies, ally_scrubbing_capabilities, attack_volume)
+	G_modified = ALGORITHMS[mode](G_pruned_noted, victim, adversary, allies, ally_scrubbing_capabilities, attack_volume)
 	cost = cost_function(G_pruned, G_modified, victim, adversary, allies, 1, 3)
 
 	# color the graph
@@ -129,6 +131,7 @@ def run_experiment(
 		"allies": allies,
 		"G_init": G_init,
 		"G_pruned": G_pruned, 
+		"G_pruned_noted": G_pruned_noted,
 		"G_modified": G_modified,
 		"G_modified_colored": G_modified_colored
 	}

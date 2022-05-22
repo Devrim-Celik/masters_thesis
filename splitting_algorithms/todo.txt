@@ -18,7 +18,7 @@
 * sometimes zero division in set split [FIXED, BUT NOT UNDERSTOOD HOW IT HAPPENS]
 * check mode in possible arguments [DONE]
 * What happens if attack volume < sum(capabilities)? --> Write Input Validation (we assume that we get it right) [DONE]
-* next to going through all permutations, an option would be nice that is greedy [TODO] 
+* next to going through all permutations, an option would be nice that is greedy [DONE] 
  - FIX ALLY DISTRIBUTION ERROR [DONE]
  - THEN, AFTER, make it so it is less nice for traffic to go over the ally nodes (unwanted_change / 2) [DONE, but with unwanted_change]
 * hook decentralized up to test function, and make test function accept command line arguments [DONE]
@@ -33,19 +33,26 @@
 * create a function to compre different algorithms no the same graph/victim/source/allies/capab/attack_vol [DONE]
 	* maybe fixed amount of nodes, then increase number of allies, have a a nice graph for that [DONE]
 	* maybe also run multiple set ups for same amount of nodes and allies, to heave variance in there [DONE]
-* verbose option for printing saving and loading [TODO]
-* new test -> make sure that there exists no other endgoals for traffic except for victim (and allies for modified graph) [TODO -> but then deleted; this is implicitly tested by `test_connectivity`]
-* comment [TODO]
-* update readme [TODO]
-* argparse [TODO]
-* add comparison graph and input & modified graph html [TODO, but used screenshot]
-
+* verbose option for printing saving and loading [DONE]
+* new test -> make sure that there exists no other endgoals for traffic except for victim (and allies for modified graph) [DONE -> but then deleted; this is implicitly tested by `test_connectivity`]
+* comment [DONE]
+* update readme [DONE]
+* argparse [DONE]
+* add comparison graph and input & modified graph html [DONE, but used screenshot]
+* add splits to decentralized [DONE]
+* LOOPS AHHHH --> Maybe BGP test_distribution_of_attack_flowkes care of it [DONE, turns out when you ignore edges that dont carry any attack traffic, there is no loop]
+* in "propagate_attack_magnitude" these is still some loop issue [DONE i think...]
+* in optimal, dont use the cost produced by the path, but instead the cost function after all allies have been connected [DONE]
+* in greedy, use cost function to compare best option as well for each ally [DONE]
 ============================================================================================================
 ==================> TODO
-* add splits to decentralized
 * do we even want unwanted_change_cost?
-
-
+* still zero division error in "decentralized"
+* docstring "propagate_attack_magnitude"
+* go look for todos in code comment
+* decentralized is slow; check if steps make sense and work
+* in algorithms compare, all of them have the same values...
+* in decentralized, 
 ============================================================================================================
 ==================> RARE TEST ERRORS TO FIX
 -> central_greedy, 500 test distribution test cases, 2 times this error
@@ -80,3 +87,25 @@ E     +  where False = all([True, True, True, True, True, True, ...])
 * change all G and Graph to graph
 * change adversary to source
 -
+
+
+============================================================================================================
+==================> REPORT
+* read through and correct
+* ask yourself questions
+	- what is the current state
+	- what have we already done
+		- BGP research (e.g. Community, forced multipath, unicast)
+		- assigning allies to a attack
+		- deciding on splits in a somewhat decentralized manner
+	- what can we do in the remaining 6 weeks to have a well rounded work
+		- basically, construct a protocol using BPG??? or some bgp on setroid
+
+============================================================================================================
+==================> REMARKS
+- BIG QUESTION: how to split traffic that has the same 5 tuple? hashing doesnt work.... Maybe just say that the souce IP address of ddos attacker is known (or ip block) and these packages arenot hashed and split on a flow-by-flow basis, but rather split on a per package basis.
+
+
+============================================================================================================
+==================> REMARKS
+Note that isntad of adding shortest distance to all nodes on the attack path in decentralized, we could also add the shortest distance towards all nodes on the attack path to all allies.

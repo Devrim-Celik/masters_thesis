@@ -16,7 +16,7 @@ sys.path.insert(0, '..') # TODO is this smart ??? is there a better way
 
 from main import run_experiment
 
-NR_EXECUTIONS_PER_TEST = 25
+NR_EXECUTIONS_PER_TEST = 50
 
 @pytest.fixture
 def generate_random_setup():
@@ -138,6 +138,39 @@ def test_correctness_of_changed_edges(
 	only_original_or_reversed = all([((u, v) in edges_init) | ((v, u) in edges_init) for u, v in edges_changed])
 
 	assert same_number_of_edges & only_original_or_reversed
+
+
+@pytest.mark.repeat(NR_EXECUTIONS_PER_TEST)
+def test_loops(
+	mode:str,
+	generate_random_setup:Callable
+	):
+	"""
+	This function validates that there exist no loops.
+
+	:param mode: which algorithm to use
+	:param generate_random_setup: a pytest fixture that returns a tuple with a random setup
+
+	:type mode: str
+	:type generate_random_setup_for_init: Callable
+
+	:raises AssertionError: raises an exception if there exists a loop in graph
+	"""
+
+	# generate a random setup
+	nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites = generate_random_setup
+
+	# run a test, using a random setup and without saving the data
+	data_dict = run_experiment(mode, nr_ASes, nr_allies, attack_volume, ally_scrubbing_capabilites, False, False)
+	G = data_dict["G_modified_colored"]
+
+	# remove all edges that do not carry any attack, since they are not used
+	edges = list(G.edges)
+	for u, v in edges:
+		if not "split_perc" in G[u][v].keys() or G[u][v]["split_perc"] == 0:
+			G.remove_edge(u, v)
+
+	assert len(list(nx.simple_cycles(G))) == 0
 
 
 @pytest.mark.repeat(NR_EXECUTIONS_PER_TEST)

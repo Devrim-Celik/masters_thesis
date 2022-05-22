@@ -13,6 +13,8 @@ import networkx as nx
 import numpy as np
 import itertools
 
+from .auxiliary_functions import cost_function
+
 def generate_G_prime(
     G:nx.classes.graph.Graph,
     victim:int,
@@ -46,20 +48,17 @@ def generate_G_prime(
     :rtype: nx.classes.graph.Graph
     """  
 
-    # set the cost of travelling along the attack path
-    attack_flows = list(nx.all_simple_paths(G, source, victim))
-    for flow in attack_flows:
-        for u, v in zip(flow[:-1], flow[1:]):
-            G[u][v]["weight"] = 0 # TODO step_cost or 0? I think 0 makes more sense since these edges are sued anyways.
-            G[u][v]["on_attack_path"] = True
-            G[u][v]["added"] = False
-
-    # then set the cost of all other edges
+    # set the cost of all existing edges
     for u, v in G.edges:
-        if not "on_attack_path" in G[u][v]:
-            G[u][v]["weight"] = step_cost
-            G[u][v]["on_attack_path"] = False
-            G[u][v]["added"] = False
+        # this line basically sets the weight to "step_cost", if the edge connects between 
+        # two nodes on the attack path, or 0 otherwise
+        # TODO although supposed to highlight edges that carry attack traffic,
+        # what about cases where to attack nodes are connected but the dge does 
+        # no carry attack traffic -> is that possible? maybe, but if yes, highly unlikely
+        G[u][v]["on_attack_path"] = G.nodes[u]["on_attack_path"] & G.nodes[v]["on_attack_path"]
+        G[u][v]["weight"] = int(G[u][v]["on_attack_path"]) * step_cost
+        G[u][v]["added"] = False
+
 
     # for each edge, add the opposite edge with cost
     edges = list(G.edges) # since it is changing during the loop
@@ -70,11 +69,12 @@ def generate_G_prime(
         G[v][u]["added"] = True    
         G[v][u]["used"] = False
 
+    """ FOR NOW LEAVE THIS STEP TODO NOTE 
     # set the unwanted changes, i.e., going through the victim and the allies
     for sink in allies + [victim]:
         for (u, v) in G.in_edges(sink):
             G[u][v]["weight"] = unwanted_change_cost
-
+    """
     return G
 
 def determine_modified_graph(
@@ -114,14 +114,11 @@ def determine_modified_graph(
     :type change_cost: float
     :type unwanted_change_cost: float
 
-    :return: a tuple containing
-        * the modified graph
-        * the associated cost
-    :rtype: tuple
+    :return: the modified graph
+    :rtype: nx.classes.graph.Graph
     """    
 
     G_prime = G.copy()
-    total_cost = 0
 
     # add weights to G'
     G_prime = generate_G_prime(
@@ -143,10 +140,12 @@ def determine_modified_graph(
 
         # go through the shortest path and change the edges if necessary
         for u, v in zip(shortest_path[:-1], shortest_path[1:]):
-            # accumulate the cost
-            total_cost += G_prime[u][v]["weight"]
             # once used, it cost will be set to 0
             G_prime[u][v]["weight"] = 0
+            # it is now considered on the attack path
+            G_prime[u][v]["on_attack_path"] = True
+            # also denote the node is now on attack path
+            G_prime.nodes[v]["on_attack_path"] = True
 
             # delete the opposite edge
             if not (v, u) in deleted_edges:
@@ -157,6 +156,9 @@ def determine_modified_graph(
             if "used" in G_prime[u][v] and G_prime[u][v]["added"]:
                 G_prime[u][v]["used"] = True
 
+            # also denote the nodes that are now on the attack path
+            G.nodes[u]["on_attack_path"]
+
     # delete all edges that were added but not used
     edges = list(G_prime.edges) # since it is changing during the loop
     for u, v in edges:
@@ -164,7 +166,7 @@ def determine_modified_graph(
             G_prime.remove_edge(u, v)
             
 
-    return G_prime, total_cost
+    return G_prime
 
 
 def set_splits(
@@ -261,10 +263,9 @@ def central_controller_complete(
     ally_scrubbing_capabilities:list,
     attack_volume:int,
     step_cost:float = 1,
-    change_cost:float = 5,
+    change_cost:float = 3,
     unwanted_change_cost:float = 50
     ):
-
     """
     This function implements a centralized algorithm that will receive as an input
     a directed, acylcic graph s.t. the `victim` node is the sink of all other nodes
@@ -304,23 +305,32 @@ def central_controller_complete(
 
     # for each possible permutation, save the cost and the permutation
     for ally_priority in ally_priority_perms:
-        temp_G_prime, temp_total_cost = determine_modified_graph(
-                                G,
-                                victim,
-                                source,
-                                list(ally_priority),
-                                step_cost,
-                                change_cost,
-                                unwanted_change_cost
-                                )
-        ally_perm_costs.append(temp_total_cost)
+        temp_G_prime = determine_modified_graph(
+            G,
+            victim,
+            source,
+            list(ally_priority),
+            step_cost,
+            change_cost,
+            unwanted_change_cost
+        )
         ally_perm_graphs.append(temp_G_prime)
+        ally_perm_costs.append(cost_function(
+            G, 
+            temp_G_prime, 
+            victim, 
+            source, 
+            allies, 
+            step_cost, 
+            change_cost
+        ))
+
 
     # determine the best permutation, get the associated graph and the cost and return them
     total_cost = min(ally_perm_costs)
     best_perm_indx = ally_perm_costs.index(total_cost)
     G_prime = ally_perm_graphs[best_perm_indx]
-
+    
     # finally set the splits
     G_prime_with_splits = set_splits(G_prime, victim, source, allies, ally_scrubbing_capabilities, attack_volume)
 
@@ -369,7 +379,6 @@ def central_controller_greedy(
     """
 
     G_prime = G.copy()
-    total_cost = 0
 
     # add weights to G'
     G_prime = generate_G_prime(
@@ -417,8 +426,6 @@ def central_controller_greedy(
 
         # go through the shortest path and change the edges if necessary
         for u, v in zip(shortest_path[:-1], shortest_path[1:]):
-            # accumulate the cost
-            total_cost += G_prime[u][v]["weight"]
             # once used, it cost will be set to 0
             G_prime[u][v]["weight"] = 0
 
@@ -433,7 +440,7 @@ def central_controller_greedy(
 
         # note that this ally is already included
         ally_set_already[closest_ally_indx] = True
-
+        print(allies[closest_ally_indx])
     # delete all edges that were added but not used
     edges = list(G_prime.edges) # since it is changing during the loop
     for u, v in edges:

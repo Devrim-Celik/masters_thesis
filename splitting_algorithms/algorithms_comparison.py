@@ -24,7 +24,6 @@ ALGORITHMS = {
 #	"bgp":None
 }
 
-
 def run_comparison(
 	nr_ASes:int = 400,
 	nr_allies_list:int = list(range(1,8)),
