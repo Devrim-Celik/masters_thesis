@@ -1,0 +1,141 @@
+23:21:30,903 root INFO [*] Simulation is setup.
+23:21:30,950 root INFO [*] Simulation is started.
+23:21:30,950 root INFO [0][94] Starting attack on 73 of magnitude 100 and frequency 30.
+23:21:30,950 root DEBUG [33] Sending attack message to [6] with percentages [1.0].
+23:21:30,950 root DEBUG [36] Sending attack message to [4] with percentages [1.0].
+23:21:30,950 root DEBUG [39] Sending attack message to [73] with percentages [1.0].
+23:21:30,950 root INFO [39][73] Attack Packet with ID Attack_Packet_94_0 arrived with magnitutde 100.0 Gbps.
+23:21:30,950 root INFO [39][73] Attack registered. Calling for help.
+23:21:30,951 root DEBUG [42] RAT relayed to [4].
+23:21:30,951 root DEBUG [45] RAT relayed to [0, 3, 5, 6, 10, 82, 53].
+23:21:30,951 root DEBUG [48] RAT relayed to [96, 1, 13, 58, 28].
+23:21:30,951 root DEBUG [48] RAT relayed to [64, 2, 67, 11, 16, 21, 87].
+23:21:30,951 root DEBUG [48] RAT relayed to [37, 9, 12, 17, 18, 55, 60].
+23:21:30,951 root DEBUG [48] RAT relayed to [7, 8, 79, 80, 23, 94, 62, 63].
+23:21:30,952 root DEBUG [48] RAT relayed to [29, 46, 31].
+23:21:30,952 root DEBUG [48] RAT relayed to [].
+23:21:30,952 root DEBUG [48] RAT relayed to [].
+23:21:30,952 root DEBUG [51] RAT relayed to [].
+23:21:30,952 root DEBUG [51] RAT relayed to [42, 92, 22].
+23:21:30,952 root DEBUG [51] RAT relayed to [40, 98].
+23:21:30,952 root DEBUG [51] RAT relayed to [].
+23:21:30,952 root DEBUG [51] RAT relayed to [].
+23:21:30,952 root DEBUG [51] RAT relayed to [].
+23:21:30,952 root DEBUG [51] RAT relayed to [33, 19, 41].
+23:21:30,953 root DEBUG [51] RAT relayed to [].
+23:21:30,953 root DEBUG [51] RAT relayed to [30, 54, 14].
+23:21:30,953 root DEBUG [51] RAT relayed to [66, 99, 36, 43, 45, 77, 15, 49, 50, 81, 89].
+23:21:30,953 root DEBUG [51] RAT relayed to [20].
+23:21:30,953 root DEBUG [51] RAT relayed to [].
+23:21:30,953 root DEBUG [51] RAT relayed to [].
+23:21:30,953 root DEBUG [51] RAT relayed to [65, 97, 35, 69, 38, 71, 74, 47, 24, 25, 26, 59, 61, 95].
+23:21:30,954 root DEBUG [51] RAT relayed to [51, 70].
+23:21:30,954 root DEBUG [51] RAT relayed to [44, 85].
+23:21:30,954 root DEBUG [51] RAT relayed to [34, 68, 72, 75, 83, 52, 86, 56, 90, 93].
+23:21:30,954 root DEBUG [51] RAT relayed to [].
+23:21:30,954 root DEBUG [51] RAT relayed to [].
+23:21:30,954 root DEBUG [51] RAT relayed to [88, 91].
+23:21:30,954 root DEBUG [51] RAT relayed to [32, 27].
+23:21:30,954 root DEBUG [51] RAT relayed to [].
+23:21:30,954 root DEBUG [51] RAT relayed to [].
+23:21:30,954 root DEBUG [51] RAT relayed to [].
+23:21:30,954 root DEBUG [51] RAT relayed to [].
+23:21:30,955 root DEBUG [51] RAT relayed to [].
+23:21:30,955 root DEBUG [51] RAT relayed to [].
+23:21:30,955 root DEBUG [51] RAT relayed to [].
+23:21:30,955 root DEBUG [51] RAT relayed to [].
+23:21:30,955 root DEBUG [51] RAT relayed to [].
+23:21:30,955 root DEBUG [54] RAT relayed to [].
+23:21:30,955 root DEBUG [54] RAT relayed to [].
+23:21:30,955 root DEBUG [54] RAT relayed to [].
+23:21:30,955 root DEBUG [54] RAT relayed to [].
+23:21:30,955 root DEBUG [54] RAT relayed to [].
+23:21:30,955 root DEBUG [54] RAT relayed to [].
+23:21:30,955 root DEBUG [54] RAT relayed to [].
+23:21:30,955 root DEBUG [54] RAT relayed to [].
+23:21:30,955 root DEBUG [54] RAT relayed to [].
+23:21:30,955 root DEBUG [54] RAT relayed to [].
+23:21:30,956 root DEBUG [54] RAT relayed to [].
+23:21:30,956 root DEBUG [54] RAT relayed to [].
+23:21:30,956 root DEBUG [54] RAT relayed to [].
+23:21:30,956 root DEBUG [54] RAT relayed to [].
+23:21:30,956 root DEBUG [54] RAT relayed to [].
+23:21:30,956 root DEBUG [54] RAT relayed to [].
+23:21:30,956 root DEBUG [54] RAT relayed to [].
+23:21:30,956 root DEBUG [54] RAT relayed to [39, 76, 78, 48, 84, 57].
+23:21:30,956 root DEBUG [54] RAT relayed to [].
+23:21:30,956 root DEBUG [54] RAT relayed to [].
+23:21:30,956 root DEBUG [54] RAT relayed to [].
+23:21:30,956 root DEBUG [54] RAT relayed to [].
+23:21:30,956 root DEBUG [54] RAT relayed to [].
+23:21:30,956 root DEBUG [54] RAT relayed to [].
+23:21:30,956 root DEBUG [54] RAT relayed to [].
+23:21:30,956 root DEBUG [54] RAT relayed to [].
+23:21:30,957 root DEBUG [54] RAT relayed to [].
+23:21:30,957 root DEBUG [54] RAT relayed to [].
+23:21:30,957 root DEBUG [54] RAT relayed to [].
+23:21:30,957 root DEBUG [54] RAT relayed to [].
+23:21:30,957 root DEBUG [54] RAT relayed to [].
+23:21:30,957 root DEBUG [54] RAT relayed to [].
+23:21:30,957 root DEBUG [54] RAT relayed to [].
+23:21:30,957 root DEBUG [54] RAT relayed to [].
+23:21:30,957 root DEBUG [54] RAT relayed to [].
+23:21:30,957 root DEBUG [54] RAT relayed to [].
+23:21:30,957 root DEBUG [54] RAT relayed to [].
+23:21:30,957 root DEBUG [54] RAT relayed to [].
+23:21:30,957 root DEBUG [54] RAT relayed to [].
+23:21:30,957 root DEBUG [54] RAT relayed to [].
+23:21:30,957 root DEBUG [54] RAT relayed to [].
+23:21:30,957 root DEBUG [54] RAT relayed to [].
+23:21:30,958 root DEBUG [54] RAT relayed to [].
+23:21:30,958 root DEBUG [54] RAT relayed to [].
+23:21:30,958 root DEBUG [54] RAT relayed to [].
+23:21:30,958 root DEBUG [54] RAT relayed to [].
+23:21:30,958 root DEBUG [54] RAT relayed to [].
+23:21:30,958 root DEBUG [54] RAT relayed to [].
+23:21:30,958 root DEBUG [54] RAT relayed to [].
+23:21:30,958 root DEBUG [54] RAT relayed to [].
+23:21:30,958 root DEBUG [54] RAT relayed to [].
+23:21:30,958 root DEBUG [54] RAT relayed to [].
+23:21:30,958 root DEBUG [54] RAT relayed to [].
+23:21:30,958 root DEBUG [54] RAT relayed to [].
+23:21:30,958 root DEBUG [54] RAT relayed to [].
+23:21:30,958 root DEBUG [57] RAT relayed to [].
+23:21:30,958 root DEBUG [57] RAT relayed to [].
+23:21:30,959 root DEBUG [57] RAT relayed to [].
+23:21:30,959 root DEBUG [57] RAT relayed to [].
+23:21:30,959 root DEBUG [57] RAT relayed to [].
+23:21:30,959 root DEBUG [57] RAT relayed to [].
+23:21:30,959 root DEBUG [63] Sending attack message to [6] with percentages [1.0].
+23:21:30,959 root DEBUG [66] Sending attack message to [4] with percentages [1.0].
+23:21:30,959 root DEBUG [69] Sending attack message to [73] with percentages [1.0].
+23:21:30,959 root INFO [69][73] Attack Packet with ID Attack_Packet_94_1 arrived with magnitutde 100.0 Gbps.
+23:21:30,959 root DEBUG [93] Sending attack message to [6] with percentages [1.0].
+23:21:30,959 root DEBUG [96] Sending attack message to [4] with percentages [1.0].
+23:21:30,959 root DEBUG [99] Sending attack message to [73] with percentages [1.0].
+23:21:30,959 root INFO [99][73] Attack Packet with ID Attack_Packet_94_2 arrived with magnitutde 100.0 Gbps.
+23:21:30,959 root DEBUG [123] Sending attack message to [6] with percentages [1.0].
+23:21:30,960 root DEBUG [126] Sending attack message to [4] with percentages [1.0].
+23:21:30,960 root DEBUG [129] Sending attack message to [73] with percentages [1.0].
+23:21:30,960 root INFO [129][73] Attack Packet with ID Attack_Packet_94_3 arrived with magnitutde 100.0 Gbps.
+23:21:30,960 root DEBUG [153] Sending attack message to [6] with percentages [1.0].
+23:21:30,960 root DEBUG [156] Sending attack message to [4] with percentages [1.0].
+23:21:30,960 root DEBUG [159] Sending attack message to [73] with percentages [1.0].
+23:21:30,960 root INFO [159][73] Attack Packet with ID Attack_Packet_94_4 arrived with magnitutde 100.0 Gbps.
+23:21:30,960 root DEBUG [183] Sending attack message to [6] with percentages [1.0].
+23:21:30,960 root DEBUG [186] Sending attack message to [4] with percentages [1.0].
+23:21:30,960 root DEBUG [189] Sending attack message to [73] with percentages [1.0].
+23:21:30,960 root INFO [189][73] Attack Packet with ID Attack_Packet_94_5 arrived with magnitutde 100.0 Gbps.
+23:21:30,960 root DEBUG [213] Sending attack message to [6] with percentages [1.0].
+23:21:30,960 root DEBUG [216] Sending attack message to [4] with percentages [1.0].
+23:21:30,960 root DEBUG [219] Sending attack message to [73] with percentages [1.0].
+23:21:30,961 root INFO [219][73] Attack Packet with ID Attack_Packet_94_6 arrived with magnitutde 100.0 Gbps.
+23:21:30,961 root DEBUG [243] Sending attack message to [6] with percentages [1.0].
+23:21:30,961 root DEBUG [246] Sending attack message to [4] with percentages [1.0].
+23:21:30,961 root DEBUG [249] Sending attack message to [73] with percentages [1.0].
+23:21:30,961 root INFO [249][73] Attack Packet with ID Attack_Packet_94_7 arrived with magnitutde 100.0 Gbps.
+23:21:30,961 root DEBUG [273] Sending attack message to [6] with percentages [1.0].
+23:21:30,961 root DEBUG [276] Sending attack message to [4] with percentages [1.0].
+23:21:30,961 root DEBUG [279] Sending attack message to [73] with percentages [1.0].
+23:21:30,961 root INFO [279][73] Attack Packet with ID Attack_Packet_94_8 arrived with magnitutde 100.0 Gbps.
+23:21:30,961 root INFO [*] Simulation has ended.

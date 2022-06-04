@@ -1,0 +1,57 @@
+13:32:25,785 root INFO [*] Simulation is setup.
+13:32:25,807 root INFO [*] Simulation is started.
+13:32:25,807 root INFO [0 | Node-81] Starting attack cycle with destination Node-42.
+13:32:25,808 root DEBUG [30] -->[Attack_Packet_81_0 | attack]<--
+ 	 [src: 81, dst: 42, last_hop: 81, next_hop: 10]
+ 	 Content: {'attack_volume': 100, 'hc': 1}
+13:32:25,808 root DEBUG [33|10] Received a Packet
+13:32:25,808 root DEBUG 	[33|10] Received a Traffic Packet
+13:32:25,808 root DEBUG [33] -->[Attack_Packet_81_0 | attack]<--
+ 	 [src: 81, dst: 42, last_hop: 10, next_hop: 2]
+ 	 Content: {'attack_volume': 100, 'hc': 2}
+13:32:25,808 root DEBUG [36|2] Received a Packet
+13:32:25,808 root DEBUG 	[36|2] Received a Traffic Packet
+13:32:25,808 root DEBUG [36] -->[Attack_Packet_81_0 | attack]<--
+ 	 [src: 81, dst: 42, last_hop: 2, next_hop: 42]
+ 	 Content: {'attack_volume': 100, 'hc': 3}
+13:32:25,808 root DEBUG [39|42] Received a Packet
+13:32:25,808 root INFO [39 | Node-42] Attack Packet with ID Attack_Packet_81_0 arrived with magnitutde 100 Gbps.
+13:32:25,808 root INFO [39 | Node-42] Calling for help.
+13:32:25,808 root DEBUG [39] -->[help | route_adv]<--
+ 	 [src: 42, dst: None, last_hop: 42, next_hop: 2]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 1}
+13:32:25,808 root DEBUG [42|2] Received a Packet
+13:32:25,808 root DEBUG 	[42|2] Received a Route Adv Packet
+13:32:25,808 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 42, dst: None, last_hop: 2, next_hop: 0]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 12}
+13:32:25,808 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 42, dst: None, last_hop: 2, next_hop: 1]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 12}
+13:32:25,808 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 42, dst: None, last_hop: 2, next_hop: 3]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 12}
+13:32:25,808 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 42, dst: None, last_hop: 2, next_hop: 4]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 12}
+13:32:25,808 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 42, dst: None, last_hop: 2, next_hop: 5]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 12}
+13:32:25,808 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 42, dst: None, last_hop: 2, next_hop: 7]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 12}
+13:32:25,808 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 42, dst: None, last_hop: 2, next_hop: 10]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 12}
+13:32:25,808 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 42, dst: None, last_hop: 2, next_hop: 11]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 12}
+13:32:25,808 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 42, dst: None, last_hop: 2, next_hop: 16]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 12}
+13:32:25,809 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 42, dst: None, last_hop: 2, next_hop: 84]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 12}
+13:32:25,809 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 42, dst: None, last_hop: 2, next_hop: 24]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 12}

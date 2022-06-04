@@ -1,0 +1,503 @@
+13:31:55,91 root INFO [*] Simulation is setup.
+13:31:55,113 root INFO [*] Simulation is started.
+13:31:55,113 root INFO [0 | Node-64] Starting attack cycle with destination Node-50.
+13:31:55,114 root DEBUG [30] -->[Attack_Packet_64_0 | attack]<--
+ 	 [src: 64, dst: 50, last_hop: 64, next_hop: 5]
+ 	 Content: {'attack_volume': 100, 'hc': 1}
+13:31:55,114 root DEBUG [33|5] Received a Packet
+13:31:55,114 root DEBUG 	[33|5] Received a Traffic Packet
+13:31:55,114 root DEBUG [33] -->[Attack_Packet_64_0 | attack]<--
+ 	 [src: 64, dst: 50, last_hop: 5, next_hop: 50]
+ 	 Content: {'attack_volume': 100, 'hc': 2}
+13:31:55,114 root DEBUG [36|50] Received a Packet
+13:31:55,114 root INFO [36 | Node-50] Attack Packet with ID Attack_Packet_64_0 arrived with magnitutde 100 Gbps.
+13:31:55,114 root INFO [36 | Node-50] Calling for help.
+13:31:55,114 root DEBUG [36] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 50, next_hop: 5]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 1}
+13:31:55,114 root DEBUG [39|5] Received a Packet
+13:31:55,114 root DEBUG 	[39|5] Received a Route Adv Packet
+13:31:55,114 root DEBUG [39] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 5, next_hop: 0]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 28}
+13:31:55,114 root DEBUG [39] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 5, next_hop: 64]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 28}
+13:31:55,114 root DEBUG [39] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 5, next_hop: 2]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 28}
+13:31:55,114 root DEBUG [39] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 5, next_hop: 3]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 28}
+13:31:55,114 root DEBUG [39] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 5, next_hop: 68]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 28}
+13:31:55,114 root DEBUG [39] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 5, next_hop: 6]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 28}
+13:31:55,114 root DEBUG [39] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 5, next_hop: 7]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 28}
+13:31:55,114 root DEBUG [39] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 5, next_hop: 71]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 28}
+13:31:55,114 root DEBUG [39] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 5, next_hop: 72]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 28}
+13:31:55,114 root DEBUG [39] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 5, next_hop: 10]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 28}
+13:31:55,114 root DEBUG [39] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 5, next_hop: 11]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 28}
+13:31:55,114 root DEBUG [39] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 5, next_hop: 12]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 28}
+13:31:55,115 root DEBUG [39] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 5, next_hop: 13]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 28}
+13:31:55,115 root DEBUG [39] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 5, next_hop: 14]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 28}
+13:31:55,115 root DEBUG [39] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 5, next_hop: 15]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 28}
+13:31:55,115 root DEBUG [39] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 5, next_hop: 75]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 28}
+13:31:55,115 root DEBUG [39] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 5, next_hop: 79]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 28}
+13:31:55,115 root DEBUG [39] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 5, next_hop: 84]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 28}
+13:31:55,115 root DEBUG [39] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 5, next_hop: 25]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 28}
+13:31:55,115 root DEBUG [39] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 5, next_hop: 26]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 28}
+13:31:55,115 root DEBUG [39] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 5, next_hop: 90]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 28}
+13:31:55,115 root DEBUG [39] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 5, next_hop: 39]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 28}
+13:31:55,115 root DEBUG [39] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 5, next_hop: 42]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 28}
+13:31:55,115 root DEBUG [39] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 5, next_hop: 47]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 28}
+13:31:55,115 root DEBUG [39] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 5, next_hop: 52]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 28}
+13:31:55,115 root DEBUG [39] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 5, next_hop: 58]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 28}
+13:31:55,115 root DEBUG [39] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 5, next_hop: 62]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 28}
+13:31:55,115 root DEBUG [42|0] Received a Packet
+13:31:55,115 root DEBUG 	[42|0] Received a Route Adv Packet
+13:31:55,115 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 0, next_hop: 36]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 29}
+13:31:55,115 root DEBUG [42|64] Received a Packet
+13:31:55,115 root DEBUG [42] -->[attack_path_from64 | route_adv]<--
+ 	 [src: 64, dst: None, last_hop: 64, next_hop: 5]
+ 	 Content: {'relay_to': 'original_next_hop', 'protocol': 'attack_path', 'as_path_to_victim': [64, 5, 50], 'hc': 1}
+13:31:55,115 root DEBUG [42|2] Received a Packet
+13:31:55,115 root DEBUG 	[42|2] Received a Route Adv Packet
+13:31:55,115 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 2, next_hop: 1]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 33}
+13:31:55,115 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 2, next_hop: 99]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 33}
+13:31:55,115 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 2, next_hop: 23]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 33}
+13:31:55,115 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 2, next_hop: 41]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 33}
+13:31:55,115 root DEBUG [42|3] Received a Packet
+13:31:55,115 root DEBUG 	[42|3] Received a Route Adv Packet
+13:31:55,115 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 3, next_hop: 35]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 40}
+13:31:55,115 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 3, next_hop: 4]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 40}
+13:31:55,115 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 3, next_hop: 43]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 40}
+13:31:55,115 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 3, next_hop: 21]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 40}
+13:31:55,115 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 3, next_hop: 87]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 40}
+13:31:55,116 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 3, next_hop: 24]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 40}
+13:31:55,116 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 3, next_hop: 95]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 40}
+13:31:55,116 root DEBUG [42|68] Received a Packet
+13:31:55,116 root DEBUG 	[42|68] Received a Route Adv Packet
+13:31:55,116 root DEBUG [42|6] Received a Packet
+13:31:55,116 root DEBUG 	[42|6] Received a Route Adv Packet
+13:31:55,116 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 6, next_hop: 56]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 42}
+13:31:55,116 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 6, next_hop: 98]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 42}
+13:31:55,116 root DEBUG [42|7] Received a Packet
+13:31:55,116 root DEBUG 	[42|7] Received a Route Adv Packet
+13:31:55,116 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 7, next_hop: 8]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 45}
+13:31:55,116 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 7, next_hop: 29]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 45}
+13:31:55,116 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 7, next_hop: 70]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 45}
+13:31:55,116 root DEBUG [42|71] Received a Packet
+13:31:55,116 root DEBUG 	[42|71] Received a Route Adv Packet
+13:31:55,116 root DEBUG [42|72] Received a Packet
+13:31:55,116 root DEBUG 	[42|72] Received a Route Adv Packet
+13:31:55,116 root DEBUG [42|10] Received a Packet
+13:31:55,116 root DEBUG 	[42|10] Received a Route Adv Packet
+13:31:55,116 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 10, next_hop: 96]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 54}
+13:31:55,116 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 10, next_hop: 66]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 54}
+13:31:55,116 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 10, next_hop: 16]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 54}
+13:31:55,116 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 10, next_hop: 83]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 54}
+13:31:55,116 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 10, next_hop: 54]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 54}
+13:31:55,116 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 10, next_hop: 22]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 54}
+13:31:55,116 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 10, next_hop: 88]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 54}
+13:31:55,116 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 10, next_hop: 59]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 54}
+13:31:55,116 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 10, next_hop: 31]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 54}
+13:31:55,116 root DEBUG [42|11] Received a Packet
+13:31:55,116 root DEBUG 	[42|11] Received a Route Adv Packet
+13:31:55,116 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 11, next_hop: 38]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 59}
+13:31:55,116 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 11, next_hop: 77]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 59}
+13:31:55,116 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 11, next_hop: 53]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 59}
+13:31:55,116 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 11, next_hop: 85]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 59}
+13:31:55,116 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 11, next_hop: 93]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 59}
+13:31:55,117 root DEBUG [42|12] Received a Packet
+13:31:55,117 root DEBUG 	[42|12] Received a Route Adv Packet
+13:31:55,117 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 12, next_hop: 60]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 60}
+13:31:55,117 root DEBUG [42|13] Received a Packet
+13:31:55,117 root DEBUG 	[42|13] Received a Route Adv Packet
+13:31:55,117 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 13, next_hop: 65]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 77}
+13:31:55,117 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 13, next_hop: 69]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 77}
+13:31:55,117 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 13, next_hop: 9]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 77}
+13:31:55,117 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 13, next_hop: 73]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 77}
+13:31:55,117 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 13, next_hop: 76]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 77}
+13:31:55,117 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 13, next_hop: 80]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 77}
+13:31:55,117 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 13, next_hop: 82]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 77}
+13:31:55,117 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 13, next_hop: 20]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 77}
+13:31:55,117 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 13, next_hop: 86]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 77}
+13:31:55,117 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 13, next_hop: 91]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 77}
+13:31:55,117 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 13, next_hop: 92]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 77}
+13:31:55,117 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 13, next_hop: 37]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 77}
+13:31:55,117 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 13, next_hop: 40]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 77}
+13:31:55,117 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 13, next_hop: 44]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 77}
+13:31:55,117 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 13, next_hop: 45]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 77}
+13:31:55,117 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 13, next_hop: 51]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 77}
+13:31:55,117 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 13, next_hop: 55]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 77}
+13:31:55,117 root DEBUG [42|14] Received a Packet
+13:31:55,117 root DEBUG 	[42|14] Received a Route Adv Packet
+13:31:55,117 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 14, next_hop: 32]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 89}
+13:31:55,117 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 14, next_hop: 33]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 89}
+13:31:55,117 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 14, next_hop: 97]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 89}
+13:31:55,117 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 14, next_hop: 74]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 89}
+13:31:55,117 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 14, next_hop: 49]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 89}
+13:31:55,117 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 14, next_hop: 81]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 89}
+13:31:55,117 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 14, next_hop: 19]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 89}
+13:31:55,117 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 14, next_hop: 94]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 89}
+13:31:55,117 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 14, next_hop: 57]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 89}
+13:31:55,118 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 14, next_hop: 27]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 89}
+13:31:55,118 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 14, next_hop: 28]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 89}
+13:31:55,118 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 14, next_hop: 30]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 89}
+13:31:55,118 root DEBUG [42|15] Received a Packet
+13:31:55,118 root DEBUG 	[42|15] Received a Route Adv Packet
+13:31:55,118 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 15, next_hop: 17]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 91}
+13:31:55,118 root DEBUG [42] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 15, next_hop: 18]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 91}
+13:31:55,118 root DEBUG [42|75] Received a Packet
+13:31:55,118 root DEBUG 	[42|75] Received a Route Adv Packet
+13:31:55,118 root DEBUG [42|79] Received a Packet
+13:31:55,118 root DEBUG 	[42|79] Received a Route Adv Packet
+13:31:55,118 root DEBUG [42|84] Received a Packet
+13:31:55,118 root DEBUG 	[42|84] Received a Route Adv Packet
+13:31:55,118 root DEBUG [42|25] Received a Packet
+13:31:55,118 root DEBUG 	[42|25] Received a Route Adv Packet
+13:31:55,118 root DEBUG [42|26] Received a Packet
+13:31:55,118 root DEBUG 	[42|26] Received a Route Adv Packet
+13:31:55,118 root DEBUG [42|90] Received a Packet
+13:31:55,118 root DEBUG 	[42|90] Received a Route Adv Packet
+13:31:55,118 root DEBUG [42|39] Received a Packet
+13:31:55,118 root DEBUG 	[42|39] Received a Route Adv Packet
+13:31:55,118 root DEBUG [42|42] Received a Packet
+13:31:55,118 root DEBUG 	[42|42] Received a Route Adv Packet
+13:31:55,118 root DEBUG [42|47] Received a Packet
+13:31:55,118 root DEBUG 	[42|47] Received a Route Adv Packet
+13:31:55,118 root DEBUG [42|52] Received a Packet
+13:31:55,118 root DEBUG 	[42|52] Received a Route Adv Packet
+13:31:55,118 root DEBUG [42|58] Received a Packet
+13:31:55,118 root DEBUG 	[42|58] Received a Route Adv Packet
+13:31:55,118 root DEBUG [42|62] Received a Packet
+13:31:55,118 root DEBUG 	[42|62] Received a Route Adv Packet
+13:31:55,118 root DEBUG [45|36] Received a Packet
+13:31:55,118 root DEBUG 	[45|36] Received a Route Adv Packet
+13:31:55,118 root DEBUG [45|5] Received a Packet
+13:31:55,118 root DEBUG 	[45|5] Received a Route Adv Packet
+13:31:55,119 root DEBUG [45] -->[attack_path_from64 | route_adv]<--
+ 	 [src: 64, dst: None, last_hop: 5, next_hop: 50]
+ 	 Content: {'relay_to': 'original_next_hop', 'protocol': 'attack_path', 'as_path_to_victim': [64, 5, 50], 'hc': 2}
+13:31:55,119 root DEBUG [45|1] Received a Packet
+13:31:55,119 root DEBUG 	[45|1] Received a Route Adv Packet
+13:31:55,119 root DEBUG [45|99] Received a Packet
+13:31:55,119 root DEBUG 	[45|99] Received a Route Adv Packet
+13:31:55,119 root DEBUG [45|23] Received a Packet
+13:31:55,119 root DEBUG 	[45|23] Received a Route Adv Packet
+13:31:55,119 root DEBUG [45|41] Received a Packet
+13:31:55,119 root DEBUG 	[45|41] Received a Route Adv Packet
+13:31:55,119 root DEBUG [45|35] Received a Packet
+13:31:55,119 root DEBUG 	[45|35] Received a Route Adv Packet
+13:31:55,119 root DEBUG [45|4] Received a Packet
+13:31:55,119 root DEBUG 	[45|4] Received a Route Adv Packet
+13:31:55,119 root DEBUG [45] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 4, next_hop: 34]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 92}
+13:31:55,119 root DEBUG [45|43] Received a Packet
+13:31:55,119 root DEBUG 	[45|43] Received a Route Adv Packet
+13:31:55,119 root DEBUG [45|21] Received a Packet
+13:31:55,119 root DEBUG 	[45|21] Received a Route Adv Packet
+13:31:55,119 root DEBUG [45|87] Received a Packet
+13:31:55,119 root DEBUG 	[45|87] Received a Route Adv Packet
+13:31:55,119 root DEBUG [45|24] Received a Packet
+13:31:55,119 root DEBUG 	[45|24] Received a Route Adv Packet
+13:31:55,119 root DEBUG [45|95] Received a Packet
+13:31:55,119 root DEBUG 	[45|95] Received a Route Adv Packet
+13:31:55,119 root DEBUG [45|56] Received a Packet
+13:31:55,119 root DEBUG 	[45|56] Received a Route Adv Packet
+13:31:55,119 root DEBUG [45|98] Received a Packet
+13:31:55,119 root DEBUG 	[45|98] Received a Route Adv Packet
+13:31:55,119 root DEBUG [45|8] Received a Packet
+13:31:55,119 root DEBUG 	[45|8] Received a Route Adv Packet
+13:31:55,119 root DEBUG [45|29] Received a Packet
+13:31:55,119 root DEBUG 	[45|29] Received a Route Adv Packet
+13:31:55,119 root DEBUG [45|70] Received a Packet
+13:31:55,119 root DEBUG 	[45|70] Received a Route Adv Packet
+13:31:55,119 root DEBUG [45|96] Received a Packet
+13:31:55,120 root DEBUG 	[45|96] Received a Route Adv Packet
+13:31:55,120 root DEBUG [45|66] Received a Packet
+13:31:55,120 root DEBUG 	[45|66] Received a Route Adv Packet
+13:31:55,120 root DEBUG [45|16] Received a Packet
+13:31:55,120 root DEBUG 	[45|16] Received a Route Adv Packet
+13:31:55,120 root DEBUG [45] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 16, next_hop: 78]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 94}
+13:31:55,120 root DEBUG [45] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 16, next_hop: 63]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 94}
+13:31:55,120 root DEBUG [45|83] Received a Packet
+13:31:55,120 root DEBUG 	[45|83] Received a Route Adv Packet
+13:31:55,120 root DEBUG [45|54] Received a Packet
+13:31:55,120 root DEBUG 	[45|54] Received a Route Adv Packet
+13:31:55,120 root DEBUG [45|22] Received a Packet
+13:31:55,120 root DEBUG 	[45|22] Received a Route Adv Packet
+13:31:55,120 root DEBUG [45|88] Received a Packet
+13:31:55,120 root DEBUG 	[45|88] Received a Route Adv Packet
+13:31:55,120 root DEBUG [45|59] Received a Packet
+13:31:55,120 root DEBUG 	[45|59] Received a Route Adv Packet
+13:31:55,120 root DEBUG [45|31] Received a Packet
+13:31:55,120 root DEBUG 	[45|31] Received a Route Adv Packet
+13:31:55,120 root DEBUG [45|38] Received a Packet
+13:31:55,120 root DEBUG 	[45|38] Received a Route Adv Packet
+13:31:55,120 root DEBUG [45|77] Received a Packet
+13:31:55,120 root DEBUG 	[45|77] Received a Route Adv Packet
+13:31:55,120 root DEBUG [45|53] Received a Packet
+13:31:55,120 root DEBUG 	[45|53] Received a Route Adv Packet
+13:31:55,120 root DEBUG [45|85] Received a Packet
+13:31:55,120 root DEBUG 	[45|85] Received a Route Adv Packet
+13:31:55,120 root DEBUG [45|93] Received a Packet
+13:31:55,120 root DEBUG 	[45|93] Received a Route Adv Packet
+13:31:55,120 root DEBUG [45|60] Received a Packet
+13:31:55,120 root DEBUG 	[45|60] Received a Route Adv Packet
+13:31:55,120 root DEBUG [45|65] Received a Packet
+13:31:55,120 root DEBUG 	[45|65] Received a Route Adv Packet
+13:31:55,120 root DEBUG [45|69] Received a Packet
+13:31:55,120 root DEBUG 	[45|69] Received a Route Adv Packet
+13:31:55,120 root DEBUG [45|9] Received a Packet
+13:31:55,120 root DEBUG 	[45|9] Received a Route Adv Packet
+13:31:55,121 root DEBUG [45] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 9, next_hop: 67]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 96}
+13:31:55,121 root DEBUG [45] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 9, next_hop: 61]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 96}
+13:31:55,121 root DEBUG [45|73] Received a Packet
+13:31:55,121 root DEBUG 	[45|73] Received a Route Adv Packet
+13:31:55,121 root DEBUG [45|76] Received a Packet
+13:31:55,121 root DEBUG 	[45|76] Received a Route Adv Packet
+13:31:55,121 root DEBUG [45|80] Received a Packet
+13:31:55,121 root DEBUG 	[45|80] Received a Route Adv Packet
+13:31:55,121 root DEBUG [45|82] Received a Packet
+13:31:55,121 root DEBUG 	[45|82] Received a Route Adv Packet
+13:31:55,121 root DEBUG [45|20] Received a Packet
+13:31:55,121 root DEBUG 	[45|20] Received a Route Adv Packet
+13:31:55,121 root DEBUG [45|86] Received a Packet
+13:31:55,121 root DEBUG 	[45|86] Received a Route Adv Packet
+13:31:55,121 root DEBUG [45|91] Received a Packet
+13:31:55,121 root DEBUG 	[45|91] Received a Route Adv Packet
+13:31:55,121 root DEBUG [45|92] Received a Packet
+13:31:55,121 root DEBUG 	[45|92] Received a Route Adv Packet
+13:31:55,121 root DEBUG [45|37] Received a Packet
+13:31:55,121 root DEBUG 	[45|37] Received a Route Adv Packet
+13:31:55,121 root DEBUG [45|40] Received a Packet
+13:31:55,121 root DEBUG 	[45|40] Received a Route Adv Packet
+13:31:55,121 root DEBUG [45|44] Received a Packet
+13:31:55,121 root DEBUG 	[45|44] Received a Route Adv Packet
+13:31:55,121 root DEBUG [45|45] Received a Packet
+13:31:55,121 root DEBUG 	[45|45] Received a Route Adv Packet
+13:31:55,121 root DEBUG [45|51] Received a Packet
+13:31:55,121 root DEBUG 	[45|51] Received a Route Adv Packet
+13:31:55,121 root DEBUG [45|55] Received a Packet
+13:31:55,121 root DEBUG 	[45|55] Received a ALLLYLALNSDÖLKSAND Route Adv Packet
+13:31:55,121 root DEBUG [45] -->[support_from_55 | route_adv]<--
+ 	 [src: 55, dst: None, last_hop: 55, next_hop: 13]
+ 	 Content: {'relay_to': 'next_hop', 'scrubbing_cap': 10, 'protocol': 'support', 'ally': 55, 'as_path_to_victim': [55, 13, 5, 50], 'hc': 1}
+13:31:55,121 root DEBUG [45|32] Received a Packet
+13:31:55,122 root DEBUG 	[45|32] Received a Route Adv Packet
+13:31:55,122 root DEBUG [45|33] Received a Packet
+13:31:55,122 root DEBUG 	[45|33] Received a Route Adv Packet
+13:31:55,122 root DEBUG [45|97] Received a Packet
+13:31:55,122 root DEBUG 	[45|97] Received a Route Adv Packet
+13:31:55,122 root DEBUG [45|74] Received a Packet
+13:31:55,122 root DEBUG 	[45|74] Received a Route Adv Packet
+13:31:55,122 root DEBUG [45|49] Received a Packet
+13:31:55,122 root DEBUG 	[45|49] Received a Route Adv Packet
+13:31:55,122 root DEBUG [45|81] Received a Packet
+13:31:55,122 root DEBUG 	[45|81] Received a Route Adv Packet
+13:31:55,122 root DEBUG [45|19] Received a Packet
+13:31:55,122 root DEBUG 	[45|19] Received a Route Adv Packet
+13:31:55,122 root DEBUG [45|94] Received a Packet
+13:31:55,122 root DEBUG 	[45|94] Received a Route Adv Packet
+13:31:55,122 root DEBUG [45|57] Received a Packet
+13:31:55,122 root DEBUG 	[45|57] Received a Route Adv Packet
+13:31:55,122 root DEBUG [45|27] Received a Packet
+13:31:55,122 root DEBUG 	[45|27] Received a Route Adv Packet
+13:31:55,122 root DEBUG [45|28] Received a Packet
+13:31:55,122 root DEBUG 	[45|28] Received a Route Adv Packet
+13:31:55,122 root DEBUG [45|30] Received a Packet
+13:31:55,122 root DEBUG 	[45|30] Received a Route Adv Packet
+13:31:55,122 root DEBUG [45|17] Received a Packet
+13:31:55,122 root DEBUG 	[45|17] Received a Route Adv Packet
+13:31:55,122 root DEBUG [45] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 17, next_hop: 48]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 99}
+13:31:55,122 root DEBUG [45] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 17, next_hop: 89]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 99}
+13:31:55,122 root DEBUG [45] -->[help | route_adv]<--
+ 	 [src: 50, dst: None, last_hop: 17, next_hop: 46]
+ 	 Content: {'attack_volume': 100, 'relay_to': 'broadcast', 'protocol': 'help', 'hc': 99}
+13:31:55,122 root DEBUG [45|18] Received a Packet
+13:31:55,122 root DEBUG 	[45|18] Received a Route Adv Packet

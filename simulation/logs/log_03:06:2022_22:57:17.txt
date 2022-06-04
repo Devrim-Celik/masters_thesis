@@ -1,0 +1,2 @@
+22:57:17,636 root INFO [*] Simulation is setup.
+22:57:17,682 root INFO [*] Simulation is started.

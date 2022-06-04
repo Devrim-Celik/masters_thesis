@@ -1,0 +1,64 @@
+11:38:52,607 root INFO [*] Simulation is setup.
+11:38:52,635 root INFO [*] Simulation is started.
+11:38:52,635 root INFO [0][60] Starting attack on 61 of magnitude 100 and frequency 30.
+11:38:52,635 root INFO [33] Sending attack message to [13] with percentages [1.0].
+11:38:52,635 root INFO [36] Sending attack message to [11] with percentages [1.0].
+11:38:52,635 root INFO [39] Sending attack message to [61] with percentages [1.0].
+11:38:52,635 root INFO [39][61] Attack Packet with ID Attack_Packet_60_0 arrived with magnitutde 100.0 Gbps.
+11:38:52,635 root INFO [39][61] Attack registered. Calling for help.
+11:38:52,635 root INFO [48][60] Help registered. Determining Attack Path.
+11:38:52,636 root INFO [51][13] Attack Path atk_path_signal_form_60 arrived. Increasing original priority.
+11:38:52,636 root INFO [54][56] Help registered. Sending Support.
+11:38:52,636 root INFO [54][11] Attack Path atk_path_signal_form_60 arrived. Increasing original priority.
+11:38:52,636 root INFO [57][12] Added entry from RAT support_from_56.
+11:38:52,636 root INFO [57][61] Attack Path atk_path_signal_form_60 arrived. Increasing original priority.
+11:38:52,637 root INFO [60][21] Added entry from RAT support_from_56.
+11:38:52,637 root INFO [63] Sending attack message to [13] with percentages [1].
+11:38:52,637 root INFO [63][0] Added entry from RAT support_from_56.
+11:38:52,637 root INFO [66] Sending attack message to [11] with percentages [1].
+11:38:52,637 root INFO [66][11] Added entry from RAT support_from_56.
+11:38:52,637 root INFO [69] Sending attack message to [61] with percentages [1].
+11:38:52,637 root INFO [69][61] Attack Packet with ID Attack_Packet_60_1 arrived with magnitutde 100 Gbps.
+11:38:52,637 root INFO [93] Sending attack message to [13] with percentages [1].
+11:38:52,637 root INFO [96] Sending attack message to [11] with percentages [1].
+11:38:52,637 root INFO [99] Sending attack message to [61, 21] with percentages [0.9, 0.1].
+11:38:52,637 root INFO [99][61] Attack Packet with ID Attack_Packet_60_2 arrived with magnitutde 90.0 Gbps.
+11:38:52,637 root INFO [102] Sending attack message to [56] with percentages [1.0].
+11:38:52,637 root INFO [102][56] Attack Packet with ID Attack_Packet_60_2 arrived with magnitutde 10.0 Gbps.
+11:38:52,637 root INFO [123] Sending attack message to [13] with percentages [1].
+11:38:52,637 root INFO [126] Sending attack message to [11] with percentages [1].
+11:38:52,637 root INFO [129] Sending attack message to [61, 21] with percentages [0.9, 0.1].
+11:38:52,637 root INFO [129][61] Attack Packet with ID Attack_Packet_60_3 arrived with magnitutde 90.0 Gbps.
+11:38:52,637 root INFO [132] Sending attack message to [56] with percentages [1.0].
+11:38:52,637 root INFO [132][56] Attack Packet with ID Attack_Packet_60_3 arrived with magnitutde 10.0 Gbps.
+11:38:52,637 root INFO [153] Sending attack message to [13] with percentages [1].
+11:38:52,637 root INFO [156] Sending attack message to [11] with percentages [1].
+11:38:52,637 root INFO [159] Sending attack message to [61, 21] with percentages [0.9, 0.1].
+11:38:52,638 root INFO [159][61] Attack Packet with ID Attack_Packet_60_4 arrived with magnitutde 90.0 Gbps.
+11:38:52,638 root INFO [162] Sending attack message to [56] with percentages [1.0].
+11:38:52,638 root INFO [162][56] Attack Packet with ID Attack_Packet_60_4 arrived with magnitutde 10.0 Gbps.
+11:38:52,638 root INFO [183] Sending attack message to [13] with percentages [1].
+11:38:52,638 root INFO [186] Sending attack message to [11] with percentages [1].
+11:38:52,638 root INFO [189] Sending attack message to [61, 21] with percentages [0.9, 0.1].
+11:38:52,638 root INFO [189][61] Attack Packet with ID Attack_Packet_60_5 arrived with magnitutde 90.0 Gbps.
+11:38:52,638 root INFO [192] Sending attack message to [56] with percentages [1.0].
+11:38:52,638 root INFO [192][56] Attack Packet with ID Attack_Packet_60_5 arrived with magnitutde 10.0 Gbps.
+11:38:52,638 root INFO [213] Sending attack message to [13] with percentages [1].
+11:38:52,638 root INFO [216] Sending attack message to [11] with percentages [1].
+11:38:52,638 root INFO [219] Sending attack message to [61, 21] with percentages [0.9, 0.1].
+11:38:52,638 root INFO [219][61] Attack Packet with ID Attack_Packet_60_6 arrived with magnitutde 90.0 Gbps.
+11:38:52,638 root INFO [222] Sending attack message to [56] with percentages [1.0].
+11:38:52,638 root INFO [222][56] Attack Packet with ID Attack_Packet_60_6 arrived with magnitutde 10.0 Gbps.
+11:38:52,638 root INFO [243] Sending attack message to [13] with percentages [1].
+11:38:52,638 root INFO [246] Sending attack message to [11] with percentages [1].
+11:38:52,638 root INFO [249] Sending attack message to [61, 21] with percentages [0.9, 0.1].
+11:38:52,638 root INFO [249][61] Attack Packet with ID Attack_Packet_60_7 arrived with magnitutde 90.0 Gbps.
+11:38:52,638 root INFO [252] Sending attack message to [56] with percentages [1.0].
+11:38:52,638 root INFO [252][56] Attack Packet with ID Attack_Packet_60_7 arrived with magnitutde 10.0 Gbps.
+11:38:52,638 root INFO [273] Sending attack message to [13] with percentages [1].
+11:38:52,638 root INFO [276] Sending attack message to [11] with percentages [1].
+11:38:52,638 root INFO [279] Sending attack message to [61, 21] with percentages [0.9, 0.1].
+11:38:52,638 root INFO [279][61] Attack Packet with ID Attack_Packet_60_8 arrived with magnitutde 90.0 Gbps.
+11:38:52,638 root INFO [282] Sending attack message to [56] with percentages [1.0].
+11:38:52,639 root INFO [282][56] Attack Packet with ID Attack_Packet_60_8 arrived with magnitutde 10.0 Gbps.
+11:38:52,639 root INFO [*] Simulation has ended.

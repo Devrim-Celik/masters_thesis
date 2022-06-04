@@ -1,0 +1,5 @@
+todo:
+
+1. Get AS path to all distances for all nodes (note: what if node is sink itself)
+2. IMplement change through help
+3. Note received attack over time (freq = 1 or maybe 0.1)

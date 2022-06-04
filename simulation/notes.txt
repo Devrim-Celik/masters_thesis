@@ -1,0 +1,20 @@
+BGP Advs Message Fields
+
+- protocol
+	- "help"
+	- "im helping"
+	- "you are on attack path"
+- relay to
+	"next hop"
+	"broadcast"
+
+
+
+Help Message
+	- contains:
+		- which IP is attacked
+		- attack volume 
+		- a way to make nodes aware that they are being attacked?
+		- amount of scrubbing capabilities
+	- protocol help
+	- relay to: broadcast
