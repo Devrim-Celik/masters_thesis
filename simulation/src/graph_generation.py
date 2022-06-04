@@ -6,10 +6,7 @@ import random
 from .aux import save_pyvis_network, assign_attributes
 
 
-def to_directed_via_BFS(
-    input_Graph:nx.classes.graph.Graph, 
-    victim:int
-):
+def to_directed_via_BFS(input_Graph, victim):
     """
     Used to make an undirected Graph with a victim node into a directed graph, such that
     the resulting graph is a sensible assignment for a directed, acyclic graph with a sink,
@@ -62,11 +59,14 @@ def to_directed_via_BFS(
         
     return Graph
 
-def add_AS_PATH_to_victim(
-    graph_init,
-    victim
-    ):
 
+
+
+def add_AS_PATH_to_victim(graph_init, victim):
+    """
+    This function will take a graph, and add the "as_path_to_victim" attribute to all notes,
+    containg the set of nodes that form the shortest path from every node to the victim node.
+    """
     graph = graph_init.copy()
 
     for node_indx in graph.nodes:
@@ -75,59 +75,6 @@ def add_AS_PATH_to_victim(
         graph.nodes[node_indx]["as_path_to_victim"] = as_path
 
     return graph
-
-def generate_directed_AS_graph(
-    nr_ASes:int, 
-    nr_allies:int,
-    figures_path:str
-):
-    """
-    Creates a directed, acyclic network topology representing the AS network. Edges
-    represent flows as directed by BGP for some IP range.
-    Furthermore assigns a victim node, an adversary node and ally nodes.
-
-    :param nr_ASes: number of AS to be in the graph
-    :param nr_allies: number of allies willing to help scrubbing DDoS traffic      
-
-    :type nr_ASes: int
-    :type nr_allies: int
-
-    :return: a tuple containing
-        * the generated graph
-        * the victim node
-        * the adversary node
-        * the allies of the victim
-    :rtype: tuple
-    """
-
-    # generate the an undirected graph, whose topology is close to the AS network
-    G = nx.random_internet_as_graph(nr_ASes)
-
-    # get the list of customers and content-providers
-    customers_and_cps = [indx for indx in range(nr_ASes) if G.nodes[indx]["type"] in ["C", "CP"]]
-
-    # from this list, randomly select the victim, adversary and allies
-    selected = random.sample(customers_and_cps, nr_allies+2)
-    victim = selected[0]
-    adversary = selected[1]
-    allies = selected[2:]
-
-    # assign attributes (e.g. color)
-    G = assign_attributes(G, victim, adversary, allies)
-    
-    # change it to a directed, acyclic graph, with the victim as a sink
-    G = to_directed_via_BFS(G, victim)
-    
-    # prune
-    G = graph_pruning_via_BFS(G, victim, 1)
-
-    # add distances to all sinks
-    G = add_AS_PATH_to_victim(G, victim)
-
-    # save
-    save_pyvis_network(G, f"{figures_path}/init_graph.html")
-
-    return G, victim, adversary, allies
 
 
 def graph_pruning_via_BFS(
@@ -189,3 +136,67 @@ def graph_pruning_via_BFS(
 
     return G_pruned
 
+
+
+
+def generate_directed_AS_graph(nr_ASes, nr_allies, figures_path, attack_vol_min = 450, attack_vol_max = 550, scrubbing_cap_min = 5):
+    """
+    Creates a directed, acyclic network topology representing the AS network. Edges
+    represent flows as directed by BGP for some IP range.
+    Furthermore assigns a victim node, an adversary node and ally nodes.
+
+    :param nr_ASes: number of AS to be in the graph
+    :param nr_allies: number of allies willing to help scrubbing DDoS traffic      
+
+    :type nr_ASes: int
+    :type nr_allies: int
+
+    :return: a tuple containing
+        * the generated graph
+        * the victim node
+        * the adversary node
+        * the allies of the victim
+    :rtype: tuple
+    """
+
+    # generate the an undirected graph, whose topology is close to the AS network
+    G = nx.random_internet_as_graph(nr_ASes)
+
+    # get the list of customers and content-providers
+    customers_and_cps = [indx for indx in range(nr_ASes) if G.nodes[indx]["type"] in ["C", "CP"]]
+
+    # from this list, randomly select the victim, adversary and allies
+    selected = random.sample(customers_and_cps, nr_allies+2)
+    victim = selected[0]
+    adversary = selected[1]
+    allies = selected[2:]
+
+    # assign attributes (e.g. color)
+    G = assign_attributes(G, victim, adversary, allies)
+    
+    # change it to a directed, acyclic graph, with the victim as a sink
+    G = to_directed_via_BFS(G, victim)
+    
+    # prune
+    G = graph_pruning_via_BFS(G, victim, 1)
+
+    # add distances to all sinks
+    G = add_AS_PATH_to_victim(G, victim)
+
+    # save figure
+    save_pyvis_network(G, f"{figures_path}/init_graph.html")
+
+    # add attack volume limits to adversary
+    a = random.randint(attack_vol_min, attack_vol_max)
+    b = random.randint(attack_vol_min, attack_vol_max)
+    attack_vol_limits = tuple(sorted([a, b]))
+    G.nodes[adversary]["attack_vol_limits"] = attack_vol_limits
+
+    # add scrubbing capabilities to ally
+    remaining = attack_vol_min - scrubbing_cap_min * len(allies)
+    for ally_indx in allies:
+        tmp = random.randint(0, remaining)
+        G.nodes[ally_indx]["scrubbing_cap"] = tmp + scrubbing_cap_min
+        remaining -= tmp
+
+    return G, victim, adversary, allies

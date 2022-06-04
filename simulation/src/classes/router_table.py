@@ -82,13 +82,16 @@ class RoutingTable():
 		return table_str
 
 	def update(self):
+		self.logger.info("T1")
 		if self.nr_entries: # TODO victim
+			self.logger.info("T2")
 			# updating the split percentages
 
 			# if we didnt increase the origin priority yet:
 			#	case 1) we dont have any ally entries, the original next hop will get 100%
 			#	case 2) we have at least one ally, traffic is split evenly between only the ally paths (TODO, evenly? we could do proportional)
 			if (not self.increased_origin_priority_status):
+				self.logger.info("T3")
 				nr_entries_highest_priority = len([True for entry in self.table if entry["priority"] == self.highest_priority])
 				assigned_percentage = 1 / nr_entries_highest_priority
 				for entry_indx in range(self.nr_entries):
@@ -101,6 +104,7 @@ class RoutingTable():
 			#	case 2) there are allies, which get their share, and the rest goes to victim
 			# NOTE: if we have allies, we assume that "self.attack_vol_on_victim" is already set
 			else:
+				self.logger.info("T4")
 				self.logger.info("MS1")
 				distribute_percentages_to_allies = 0
 
@@ -173,6 +177,7 @@ class RoutingTable():
 
 	def update_attack_volume(self, attack_volume):
 		self.attack_vol_on_victim = attack_volume
+		self.update()
 
 	def reduce_allies_based_on_last_hop(self, last_hop):
 		for entry_indx in range(self.nr_entries):

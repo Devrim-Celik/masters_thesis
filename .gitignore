@@ -3,5 +3,7 @@ experiments/
 .ipynb_checkpoints/
 *.html
 *.pkl
+figures/
+logs/
 
 !README_*

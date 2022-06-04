@@ -6,9 +6,7 @@
 # TODO source is also on attack path
 # TODO maybe packet to dict
 # TODO pkt_type to type
-import simpy
-import logging
-import numpy as np
+
 import random
 import copy
 
@@ -26,7 +24,7 @@ class AutonomousSystem(object):
 						and ready to receive packets for
 	:param received_attacks: to collected data on received attacks
 	:param on_attack_path: to denote, whether this AS lies on an attack path
-	:param attack_path_last_hop: if it is on attack path, this value will denote the ASN of the predecessor
+	:param attack_path_predecessor: if it is on attack path, this value will denote the ASN of the predecessor
 
 
 	:type env: simpy.Environment
@@ -38,17 +36,16 @@ class AutonomousSystem(object):
 	:type advertised: list[int]
 	:type received_attacks: list[tuple]
 	:type on_attack_path: bool
-	:type attack_path_last_hop: int
+	:type attack_path_predecessor: int
 	"""
 
-	def __init__(self, env, network, main_logger, logger, asn, router_table, ebgp_AS_peers, additional_attr):
+	def __init__(self, env, network, logger, asn, router_table, ebgp_AS_peers, additional_attr):
 
 		# TODO checks
 		
 		# set attributes
 		self.env = env
 		self.network = network
-		self.main_logger = main_logger
 		self.logger = logger
 		self.asn = asn
 		self.router_table = router_table
@@ -57,17 +54,26 @@ class AutonomousSystem(object):
 		self.advertised = [self.asn]
 		self.received_attacks = []
 		self.on_attack_path = False
-		self.attack_path_last_hop = None
+		self.attack_path_predecessor = None
 		self.new_line = "\n"
 		self.tab = "\t"
+
+
 
 	def send_packet(self, pkt, next_hops):
 		"""
 		This method is reponsible for sending a packet. It calls corresponding functions, depending
 		on the type of the received packet. Either a normal packet with attack load ("STD") or a route 
 		advertisement ("RAT").
+
+		:param pkt: the, to be sent, packet
+		:param next_hops: a list of destinations this packet is going to be transmitted to (RAT)/
+							a list of destination with probabilites this packet is going to be distributed to (STD)
+
+		:type pkt: dict
+		:type next_hops: list/dict
 		"""
-		if next_hops == []:
+		if next_hops == []: # TODO routing table
 			return
 
 		self.logger.debug(f"""[{self.env.now}] Sending Packet with Next Hops {next_hops}:
@@ -80,13 +86,40 @@ class AutonomousSystem(object):
 			=====================================================================
 		""")
 
+		# call the corresponding send function
 		if pkt["pkt_type"] == "STD":
-			self.env.process(self.network.relay_std_packet(pkt, next_hops))
+			# check that all targets are connected to this AS
+			if set([t[0] for t in next_hops]).issubset(set(self.ebgp_AS_peers)):
+				self.env.process(self.network.relay_std_packet(pkt, next_hops))
+			else:
+				raise Exception("Trying to send to an AS, that is not a peer!")
 		elif pkt["pkt_type"] == "RAT":
-			self.env.process(self.network.relay_rat(pkt, next_hops))
+			# check that all targets are connected to this AS
+			
+			if set(next_hops).issubset(set(self.ebgp_AS_peers)):
+				self.env.process(self.network.relay_rat(pkt, next_hops))
+			else:
+				raise Exception("Trying to send to an AS, that is not a peer!")
 
-	def process_pkt(self, pkt): # TODO do we need all these arguments? like last hop and next hop might be redundant
 
+
+	def process_pkt(self, pkt): 
+		"""
+		This method is responsible for handling incoming packets. Generally, we can 
+		differentiate between the following types of packets:
+			* STD: a standard packet, carrying some load 
+			* RAT: a route advertisement, which can contain one of the following protocol calls
+				* help: issued from an attacked victim
+				* support: issued from an ally of the attacked victim
+				* as_path: issued from the AS where the attack traffic originates from
+		Since the reaction to different protocol calls is quite different between different types
+		of autonomous systems, this method calls specific "reaction" methods, depending on the
+		type of RAT.
+
+		:param pkt: the incoming packets
+
+		:type pkt: dict
+		"""
 		self.logger.debug(f"""[{self.env.now}] Received Packet from {pkt['last_hop']}:
 			=====================================================================
 			Identifier: 	{pkt['identifier']}
@@ -97,11 +130,14 @@ class AutonomousSystem(object):
 			=====================================================================
 		""")
 
+		self.logger.info(f"RECEIVED:{pkt['identifier']}")
+		# for standard packets
 		if pkt["pkt_type"] == "STD":
 			self.process_std_pkt(pkt)
-
+		# for RAT packets
 		elif pkt["pkt_type"] == "RAT":
-			# send as necessary
+			self.logger.info("OK WE THERE")
+			########## distributed as specified by the protocol
 			pkt_tmp = copy.deepcopy(pkt) # can we Delete this TODO? --> pretty sure not
 			pkt_tmp["last_hop"] = self.asn
 			if pkt["content"]["relay_type"] == "next_hop": # TODO when do we use this??? check this pls
@@ -111,13 +147,18 @@ class AutonomousSystem(object):
 			elif pkt["content"]["relay_type"] == "broadcast":
 				next_hops = list(set(self.ebgp_AS_peers) - {pkt["last_hop"]})
 			self.send_packet(pkt_tmp, next_hops) 
-
-			# react to it if it didnt see it yet
+			self.logger.info("OK WE THERE 2")
+			self.logger.info(str(self.seen_rats))
+			############## react to it, if this packet has not already been seen
 			if not pkt["identifier"] in self.seen_rats:
+				self.logger.info("NOT SEEEN")
 				self.seen_rats.append(pkt["identifier"])
-
+				# call the corresponding reaction
 				if pkt["content"]["protocol"] == "help":
 					self.rat_reaction_help(pkt)
+				elif pkt["content"]["protocol"] == "help_update":
+					self.logger.info("ENTERING")
+					self.rat_reaction_help_update(pkt)
 				elif pkt["content"]["protocol"] == "support":
 					self.rat_reaction_support(pkt)
 				elif pkt["content"]["protocol"] == "attack_path":
@@ -126,6 +167,15 @@ class AutonomousSystem(object):
 
 
 	def process_std_pkt(self, pkt):
+		"""
+		This method is responsible for processing an incoming, standard packet. The basic idea is,
+		that if we are the destination of the packet, we will receive it, and otherwise it will
+		be relayed to the next hop.
+
+		:param pkt: the incoming packets
+
+		:type pkt: dict
+		"""
 
 		# if the destination of this packet is an address this AS advertise, this node is getting attacked
 		if pkt["dst"] in self.advertised:
@@ -135,20 +185,62 @@ class AutonomousSystem(object):
 			pkt["last_hop"] = self.asn
 			self.send_packet(pkt, self.router_table.determine_next_hops(pkt["dst"]))
 
+
+
 	def attack_reaction(self, pkt):
+		"""
+		This method implements the response to receiving an attack packet.
+
+		:param pkt: the incoming packets
+
+		:type pkt: dict
+		"""
 		self.logger.info(f"[{self.env.now}] Attack Packet with ID {pkt['identifier']} arrived with magnitutde {pkt['content']['attack_volume']} Gbps.")
-		self.main_logger.info(f"[{self.env.now}][{self.asn}] Attack Packet with ID {pkt['identifier']} arrived with magnitutde {pkt['content']['attack_volume']} Gbps.")
-				
 		self.received_attacks.append((self.env.now, pkt["content"]["attack_volume"]))
 
-	def rat_reaction_help(self, pkt):
+
+
+	def rat_reaction_help_update(self, pkt):
+		""" # TODO dont needs this, both help an dhelp update do the same
+		This method implements the response to receiving a RAT packet, with the help update protocol. The router table will
+		receive an update regarding the current estimate of the attack volume.
+
+		:param pkt: the incoming packets
+
+		:type pkt: dict
+		"""
+		self.logger.info(f"Reacting to Help Update RAT")
 		self.router_table.update_attack_volume(pkt["content"]["attack_volume"])
 
-	# TODO include allies capapbilities not responsible for
+
+	def rat_reaction_help(self, pkt):
+		"""
+		This method implements the response to receiving a RAT packet, with the help protocol. A default AS will simply
+		broadcast it to its peers.
+
+		:param pkt: the incoming packets
+
+		:type pkt: dict
+		"""
+		self.logger.info(f"Reacting to Help RAT")
+		self.router_table.update_attack_volume(pkt["content"]["attack_volume"])
+
+
+
 	def rat_reaction_support(self, pkt): 
+		"""
+		This method implements the response to receiving a RAT packet, with the support protocol. This node
+		might update its routing table, if 
+			a) it does not believe itself to be on the attack path, or
+			b) if it is on the attack path, the last hop of the package does not come along the attack path.
+
+		:param pkt: the incoming packets
+
+		:type pkt: dict
+		"""
 		self.logger.info(f"Reacting to Support RAT")
 		# we add a router, only if we dont know if we are on the attack path yet, or, if the router comes not from the attack path
-		if (not self.on_attack_path) or (pkt["last_hop"] != self.attack_path_last_hop): # TODO put this in priority if else, 1 and 3
+		if (not self.on_attack_path) or (pkt["last_hop"] != self.attack_path_predecessor): # TODO put this in priority if else, 1 and 3
 			# add the advertised route the routing table
 			entry = {
 				"identifier": "TODO", 
@@ -163,49 +255,96 @@ class AutonomousSystem(object):
 				"time_added": self.env.now
 			}
 			self.router_table.add_entry(entry) # TODO need to trigger some change?
-			self.main_logger.info(f"[{self.env.now}][{self.asn}] Added entry from RAT {pkt['identifier']}.")
+		
+
+
 
 	def rat_reaction_attack_path(self, pkt):
-		self.logger.info(f"Reacting to Attack Path RAT")
-		# increase the priority of the original next hop to be on par with the ally routes
+		"""
+		This method implements the response to receiving a RAT packet, with the attack_path protocol. the response is
+		to increase the priority of the original next hop, so that it is on an even level with used ally entries. At the same
+		time, decrease all ally priorities that come from the attack path, since an AS further up the attack path is responsible
+		for splitting towards it.
+
+		:param pkt: the incoming packets
+
+		:type pkt: dict
+		"""
+		self.logger.info(f"[{self.env.now}] Reacting to Attack Path RAT")
+
+		# note that this AS is on the attack path, and not its predecessor
 		self.on_attack_path = True
-		self.attack_path_last_hop = pkt["last_hop"]
+		self.attack_path_predecessor = pkt["last_hop"]
+
+		# increase the priority of the original next hop entry
 		self.router_table.increase_original_priority()
+		# decrease the priority of all ally paths that come from the attack path
 		self.router_table.reduce_allies_based_on_last_hop(pkt["last_hop"])
+
+
+
+	def __str__(self):
+		return f"AS-{self.asn}"
+
+
+
+
 
 
 class SourceAS(AutonomousSystem):
 	# TODO can only handle if *args is used, not **kwargs (or we can make it vice verca) --> general soluation
+
+	__doc__ += AutonomousSystem.__doc__
+
 	def __init__(self, *args, **kwargs):
+		"""
+		This class represents an autonomous systems, that is the source of attack traffic; it inherits from "AutonomousSystem".
+
+		:param attack_vol_limits:
+		:param attack_freq:
+		:param as_path_to_victim:
+		:param atk_path_signal:
+		:param attack_traffic_recording:
+
+		:type attack_vol_limits: tuple[int, int]
+		:type attack_freq: float
+		:type as_path_to_victim: list[int]
+		:type atk_path_signal: bool
+		:type attack_traffic_recording:	list[float]	
+		"""
+		
 		super().__init__(*args)
 
 		# used to determine size and frequency of attack packets
-		self.attack_volume = args[-1]["attack_vol"]
+		self.attack_vol_limits = args[-1]["attack_vol_limits"]
 		self.attack_freq = args[-1]["attack_freq"]
 
 		# TODO
 		self.as_path_to_victim = args[-1]["as_path_to_victim"]
 
-
 		# used to recognize, whether an attack path signal has already been issued
 		self.atk_path_signal = False	
+
+		# used to record sent out attack traffic 
+		self.attack_traffic_recording = []
 
 
 	def attack_cycle(self):
 
-		self.logger.info(f"[{self.env.now}] Starting attack on {self.as_path_to_victim[-1]} of magnitude {self.attack_volume} and frequency {self.attack_freq}.")
-		self.main_logger.info(f"[{self.env.now}][{self.asn}] Starting attack on {self.as_path_to_victim[-1]} of magnitude {self.attack_volume} and frequency {self.attack_freq}.")
-		
+		self.logger.info(f"[{self.env.now}] Starting attack on {self.as_path_to_victim[-1]} with limits {self.attack_vol_limits} and frequency {self.attack_freq}.")
+
 		atk_indx = 0
 		while True:
 			yield self.env.timeout(self.attack_freq)
+			attack_volume = random.randint(*self.attack_vol_limits) + random.randint(-10, 10) + atk_indx*5
+			self.attack_traffic_recording.append((self.env.now, attack_volume))
 			pkt = {
 				"identifier": f"Attack_Packet_{self.asn}_{atk_indx}",
 				"pkt_type": "STD",
 				"src": self.asn,
 				"dst": self.as_path_to_victim[-1],
 				"last_hop": self.asn,
-				"content": {"attack_volume" : self.attack_volume + random.randint(-10, 10), "relay_type": "next_hop", "hc": 0}
+				"content": {"attack_volume" : attack_volume, "relay_type": "next_hop", "hc": 0}
 			}
 			self.send_packet(pkt, self.router_table.determine_next_hops(self.as_path_to_victim[-1]))
 			atk_indx += 1
@@ -219,7 +358,6 @@ class SourceAS(AutonomousSystem):
 			self.atk_path_signal = True
 			self.on_attack_path = True
 			self.logger.info(f"[{self.env.now}] Help registered. Determining Attack Path.")
-			self.main_logger.info(f"[{self.env.now}][{self.asn}] Help registered. Determining Attack Path.")
 			pkt = {
 				"identifier": f"atk_path_signal_form_{self.asn}",
 				"pkt_type": "RAT",
@@ -233,6 +371,9 @@ class SourceAS(AutonomousSystem):
 
 			# own reaction: 
 			self.router_table.increase_original_priority()
+
+	def __str__(self):
+		return f"AS-{self.asn} (Source) [{self.attack_vol_limits}]"
 
 class VictimAS(AutonomousSystem):
 	# TODO can only handle if *args is used, not **kwargs (or we can make it vice verca) --> general soluation
@@ -248,28 +389,58 @@ class VictimAS(AutonomousSystem):
 		# used to recognize, whether a help signal has already been issued
 		self.help_signal_issued = False	
 
+		# used to keep track of the number of help updates issued
+		self.nr_help_updates = 0
+
+		# used to keep track of the attack traffic
+		self.attack_volume_sma = None
+
+		# denote the allies that help
+		self.ally_help = {}
+
+
+	def attack_vol_approximation(self):
+		# TODO maybe something fancier
+		#	this is too flexible
+		# 	but moving average to slow --> we dont want average, but current approximation
+		#	also a threshold would be nice, so that it doesnt trigger every attack, but only when too much deviation
+		return self.received_attacks[-1][1]
+
+
 	def attack_reaction(self, pkt):
 		
 		self.logger.info(f"[{self.env.now}] Attack Packet with ID {pkt['identifier']} arrived with magnitutde {pkt['content']['attack_volume']} Gbps.")
-		self.main_logger.info(f"[{self.env.now}][{self.asn}] Attack Packet with ID {pkt['identifier']} arrived with magnitutde {pkt['content']['attack_volume']} Gbps.")
 		self.received_attacks.append((self.env.now, pkt["content"]["attack_volume"]))
 
+
+		pkt = {
+			"identifier": None,
+			"pkt_type": "RAT",
+			"src": self.asn,
+			"dst": None,
+			"last_hop": self.asn, 
+			"content": {"attack_volume": self.attack_vol_approximation() + sum(self.ally_help.values()), "attacker_asn": pkt["src"], "relay_type": "broadcast", "protocol": None, "hc": 0}
+		}
 		if not self.help_signal_issued:
 			self.logger.info(f"[{self.env.now}] Attack registered. Calling for help.")
-			self.main_logger.info(f"[{self.env.now}][{self.asn}] Attack registered. Calling for help.")
 			self.help_signal_issued = True
-			pkt = {
-				"identifier": "help",
-				"pkt_type": "RAT",
-				"src": self.asn,
-				"dst": None,
-				"last_hop": self.asn,
-				"content": {"attack_volume": pkt["content"]["attack_volume"], "attacker_asn": pkt["src"], "relay_type": "broadcast", "protocol": "help", "hc": 0}
-			}
-			self.send_packet(pkt, self.ebgp_AS_peers)
+			pkt["identifier"] = "help"
+			pkt["content"]["protocol"] = "help"
+		else:
+			self.logger.info(f"[{self.env.now}] Attack registered. Sending out update message.")
+			pkt["identifier"] = f"help_update{self.nr_help_updates}"
+			pkt["content"]["protocol"] = "help_update"
+			self.nr_help_updates += 1
+
+		self.send_packet(pkt, self.ebgp_AS_peers)
+
+
 
 	def rat_reaction_support(self, pkt):
-		pass # ally doesnt change and doesnt add rules to router entry: --> TODO add it (for completeness) but dont follow? might be hard
+		self.ally_help[f"ally{pkt['src']}"] = pkt["content"]["scrubbing_capability"]
+
+	def __str__(self):
+		return f"AS-{self.asn} (Victim)"
 
 class AllyAS(AutonomousSystem):
 	# TODO can only handle if *args is used, not **kwargs (or we can make it vice verca) --> general soluation
@@ -286,11 +457,9 @@ class AllyAS(AutonomousSystem):
 		self.help_signal_issued = False	
 
 
-
 	def rat_reaction_help(self, pkt):
 		self.router_table.update_attack_volume(pkt["content"]["attack_volume"])
 		self.logger.info(f"[{self.env.now}] Help registered. Sending Support.")
-		self.main_logger.info(f"[{self.env.now}][{self.asn}] Help registered. Sending Support.")
 		self.advertised.append(self.as_path_to_victim[-1])
 		pkt = {
 			"identifier": f"support_from_{self.asn}",
@@ -301,3 +470,6 @@ class AllyAS(AutonomousSystem):
 			"content": {"relay_type": "original_next_hop", "scrubbing_capability": self.scrubbing_cap, "protocol": "support", "ally": self.asn, "as_path_to_victim": self.as_path_to_victim, "hc": 0}
 		}
 		self.send_packet(pkt, self.router_table.determine_highest_original())
+
+	def __str__(self):
+		return f"AS-{self.asn} (Ally) [{self.scrubbing_cap}]"

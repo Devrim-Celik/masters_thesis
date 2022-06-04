@@ -1,5 +1,18 @@
-todo:
+todos:
 
-1. Get AS path to all distances for all nodes (note: what if node is sink itself)
-2. IMplement change through help
-3. Note received attack over time (freq = 1 or maybe 0.1)
+* Comment!
+	* graph
+	* nodes
+	* route table
+	* aux function
+	* include mthods in class description?
+* function to translate back from INternet to Networkx
+* router table for victim
+* with more than 1 --> osciallations --> still there?
+* graph generation also creates:
+	- attack magnitude limit [a, b]
+	- ally capabilities
+* reproduciability via seed to svae and repeat problematic examples
+* adaptive attack volume
+* attack volume gaussian
+* different attack modes
