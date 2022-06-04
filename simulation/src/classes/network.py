@@ -2,6 +2,9 @@
 import logging
 import random
 import string
+import matplotlib.pyplot as plt
+import seaborn as sns
+import copy
 
 from .nodes import AutonomousSystem, SourceAS, VictimAS, AllyAS
 from .router_table import RoutingTable
@@ -26,9 +29,13 @@ class Internet(object):
 		victim_indx, 
 		source_indx,
 		ally_indc,
+		main_logger,
+		network_logger,
+		create_logger_func,
+		logger_subpath,
 		prop_delay = 3,
 		attack_vol = 100,
-		attack_freq = 30
+		attack_freq = 1
 		):
 
 		# set attributes
@@ -37,7 +44,7 @@ class Internet(object):
 		self.nr_ASes = len(graph.nodes)
 		self.ASes = []
 		self.allies = []
-
+		self.logger = network_logger
 		# TODO add these as properties to the networkx graph nodes
 		VICTIM_SCRUB = 50
 		ALLY_SCRUB = 10	
@@ -58,7 +65,7 @@ class Internet(object):
 				"priority": 1,
 				"split_percentage": None,
 				"scrubbing_capabilities": None,
-				"as_path": None,
+				"as_path": [],
 				"origin": "original",
 				"recvd_from": node_indx, # we just assume it comes from itself
 				"time_added": 0
@@ -88,11 +95,14 @@ class Internet(object):
 				additional_attr["attack_freq"] = attack_freq
 			elif role == "victim":
 				additional_attr["scrubbing_capability"] = VICTIM_SCRUB
+				print(init_routing_table)
 			elif role == "ally":
-				additional_attr["scrubbing_capability"] = ALLY_SCRUB
+				additional_attr["scrubbing_capability"] = ALLY_SCRUB + random.randint(-5, 15)
 
-			self.ASes.append(self.__special_AS_classes__[role](env, self, node_indx, RoutingTable(init_routing_table), neighbors, additional_attr))
-			self.ASes[-1].router_table.set_AS(self.ASes[-1])
+			# create a logger for the AS
+			as_logger = create_logger_func(f"AS{node_indx}-LOGGER", f"{logger_subpath}/log_node_{node_indx}.txt")
+
+			self.ASes.append(self.__special_AS_classes__[role](env, self, main_logger, as_logger, node_indx, RoutingTable(self.env, init_routing_table, node_indx, as_logger), neighbors, additional_attr))
 
 		self.source = self.ASes[source_indx]
 		self.victim = self.ASes[victim_indx]
@@ -101,50 +111,77 @@ class Internet(object):
 
 
 	@staticmethod
-	def generate_random_identifier(length=16):
+	def generate_random_identifier(length=4):
 		return ''.join(random.choices(string.ascii_letters + string.digits, k = length))
 
 	def relay_std_packet(
 		self,
-		identifier,
-		pkt_type,
-		src,
-		dst,
-		last_hop,
-		next_hops_w_perc: list,
-		content
+		pkt,
+		next_hops_w_perc: list
 		):
 
 		# increase hop counter
-		content["hc"] += 1
+		pkt["content"]["hc"] += 1
 		# wait for the propagation delay
-		yield self.env.timeout(self.propagation_delay)
+		yield self.env.timeout(self.propagation_delay + random.uniform(-0.01, 0.01))
 
 		# TODO change thsi bck to debug
-		logging.info(f"[{self.env.now}] Sending attack message to {[t[0] for t in next_hops_w_perc]} with percentages {[t[1] for t in next_hops_w_perc]}.")
+		self.logger.info(f"[{self.env.now}] Sending attack message to {[t[0] for t in next_hops_w_perc]} with percentages {[t[1] for t in next_hops_w_perc]} from {pkt['last_hop']}.")
+
+
+		attack_vol = pkt["content"]["attack_volume"] # NOTE: need this bc concurrency issues
 
 		# split the attack traffic, according to proportions of the given routing table
 		for next_hop, percentage in next_hops_w_perc:
-			modified_content = {k:v for k, v in content.items()}
-			modified_content["attack_volume"] *= percentage
-			self.ASes[next_hop].process_pkt(identifier, pkt_type, src, dst, last_hop, next_hop, modified_content)
+			tmp_pkt = copy.deepcopy(pkt)
+			modified_content = {k:v for k, v in pkt["content"].items()}
+			modified_content["attack_volume"] = attack_vol * percentage
+			tmp_pkt["content"] = modified_content
+			tmp_pkt["next_hop"] = next_hop
+			self.ASes[next_hop].process_pkt(tmp_pkt)
 
 	def relay_rat(
 		self,
-		identifier,
-		pkt_type,
-		src,
-		dst,
-		last_hop,
-		next_hops: list,
-		content
+		pkt,
+		next_hops
 		):
 
 		# increase hop counter
-		content["hc"] += 1
+		pkt["content"]["hc"] += 1
 		# wait for the propagation delay
-		yield self.env.timeout(self.propagation_delay)
-
-		logging.debug(f"[{self.env.now}] RAT {identifier} relayed to {next_hops} from {last_hop}.")
+		yield self.env.timeout(self.propagation_delay + random.uniform(-0.01, 0.01))
+		self.logger.debug(f"[{self.env.now}] RAT {pkt['identifier']}  delayed to {next_hops} from {pkt['last_hop']}.")
 		for next_hop in next_hops:
-			self.ASes[next_hop].process_pkt(identifier, pkt_type, src, dst, last_hop, next_hop, content)
+			pkt["next_hop"] = next_hop
+			self.ASes[next_hop].process_pkt(pkt)
+
+
+	def plot_arrived_attacks(self):
+		plt.figure("ATTACK")
+		for ally in self.allies:
+			#plt.title(title = f"ally-{ally.asn}")
+			#print(ally.received_attacks)
+			#data = Internet.transform()
+			c = "#"+''.join([random.choice('0123456789ABCDEF') for j in range(6)])
+			plt.scatter(*list(zip(*ally.received_attacks)), label = f"Ally:{ally.asn} [{ally.scrubbing_cap}]", s= 1, color = c)
+			#plt.plot(*list(zip(*ally.received_attacks)), label = f"Ally:{ally.asn} [{ally.scrubbing_cap}]", color = c)
+		#plt.figure(str(self.victim.asn))
+		#plt.title(title = f"victim")
+		#print(self.victim.received_attacks)
+
+		c = "#"+''.join([random.choice('0123456789ABCDEF') for j in range(6)])
+		plt.scatter(*list(zip(*self.victim.received_attacks)), label = "Victim:" + str(self.victim.asn), s = 1,color = c)
+		#plt.plot(*list(zip(*self.victim.received_attacks)), label = "Victim:" + str(self.victim.asn), color  = c)
+		plt.legend()
+		plt.show()
+		
+	@staticmethod
+	def transform(received_attacks):
+		data = []
+		available_ts = {t[0]: indx for indx, t in enumerate(received_attacks)}
+		for ts in range(received_attacks[-1][0]):
+			if ts in available_ts.keys():
+				data.append((ts, received_attacks[available_ts[ts]][1]))
+			else:
+				data.append([ts, 0])
+		return data

@@ -1,9 +1,0 @@
-23:17:50,763 root INFO [*] Simulation is setup.
-23:17:50,808 root INFO [*] Simulation is started.
-23:17:50,808 root INFO [0][54] Starting attack on 45 of magnitude 100 and frequency 30.
-23:17:50,808 root DEBUG [33] Sending attack message to [5] with percentages [1.0].
-23:17:50,808 root DEBUG [36] Sending attack message to [14] with percentages [1.0].
-23:17:50,808 root DEBUG [39] Sending attack message to [45] with percentages [1.0].
-23:17:50,808 root INFO [39][45] Attack Packet with ID Attack_Packet_54_0 arrived with magnitutde 100.0 Gbps.
-23:17:50,808 root INFO [39][45] Attack registered. Calling for help.
-23:17:50,808 root DEBUG [42] RAT relayed to [14].

@@ -1,4 +1,0 @@
-23:13:38,864 root INFO [*] Simulation is setup.
-23:13:38,913 root INFO [*] Simulation is started.
-23:13:38,913 root INFO [0][21] Starting attack on 37 of magnitude 100 and frequency 30.
-23:13:38,913 root DEBUG [33] Sending attack message to [1] with percentages [None].

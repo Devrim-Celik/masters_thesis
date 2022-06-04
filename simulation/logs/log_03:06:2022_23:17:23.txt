@@ -1,6 +1,0 @@
-23:17:23,530 root INFO [*] Simulation is setup.
-23:17:23,577 root INFO [*] Simulation is started.
-23:17:23,577 root INFO [0][86] Starting attack on 33 of magnitude 100 and frequency 30.
-23:17:23,577 root DEBUG [33] Sending attack message to [9] with percentages [1.0].
-23:17:23,577 root DEBUG [36] Sending attack message to [33] with percentages [1.0].
-23:17:23,577 root INFO [36][33] Attack Packet with ID Attack_Packet_86_0 arrived with magnitutde 100.0 Gbps.

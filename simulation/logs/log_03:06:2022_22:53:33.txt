@@ -1,1 +1,0 @@
-22:53:33,637 root INFO [*] Simulation is setup.

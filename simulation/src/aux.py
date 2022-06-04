@@ -1,6 +1,7 @@
 import pickle
 from pyvis.network import Network
 import networkx as nx
+import logging
 
 def save_as_pickle(
     object_to_pickle:object, 
@@ -148,3 +149,16 @@ def assign_attributes(
             Graph.nodes[node_indx]["color"] = "lightgrey"
         
     return Graph
+
+
+def create_logger(name, log_file_location, level = logging.DEBUG, log_format_str = '%(name)s ==> %(levelname)s: %(message)s'):
+    formatter = logging.Formatter(log_format_str)
+
+    handler = logging.FileHandler(log_file_location)        
+    handler.setFormatter(formatter)
+
+    logger = logging.getLogger(name)
+    logger.setLevel(level)
+    logger.addHandler(handler)
+
+    return logger
