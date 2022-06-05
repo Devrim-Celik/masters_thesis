@@ -9,7 +9,8 @@ from src.classes.network import Internet
 from src.graph_generation import generate_directed_AS_graph
 from src.aux import create_logger
 
-
+SEED = random.randint(0, 1000000000000)
+random.seed(SEED)
 
 def setup_env(simulation_logger):
     # create and simpy environment instance
@@ -34,15 +35,16 @@ def run_simulation(
 
 
 
-def main(nr_ASes = 100, nr_allies = 1, max_sim_length = 300, propagation_delay = 3, attack_freq = 1):
-
-
+def main(nr_ASes = 300, nr_allies = 4, max_sim_length = 100, propagation_delay = 3, attack_freq = 1):
 	# current date and time, used to name this simulation
 	time_date_str = datetime.now().strftime("%d:%m:%Y_%H:%M:%S")
 
+	# use this time date string, and the random seed, to name the simulation folder name
+	simulation_folder_name = f"simulation_{time_date_str}_{SEED}"
+
 	# directories for logs and figures
-	log_path = f"./logs/simulation_{time_date_str}"
-	figure_path = f"./figures/simulation_{time_date_str}"
+	log_path = f"./logs/{simulation_folder_name}"
+	figure_path = f"./figures/{simulation_folder_name}"
 	Path(log_path).mkdir(parents=True, exist_ok=True)
 	Path(figure_path).mkdir(parents=True, exist_ok=True)
 	print(f"[*] Logs will be saved in: {log_path}/")
@@ -66,5 +68,9 @@ def main(nr_ASes = 100, nr_allies = 1, max_sim_length = 300, propagation_delay =
 
 	# create plots about this simulation
 	net.plot()
+
+	# also create a plot of the current topology
+	#net.generate_networkx_graph() # TODO uncomment
+
 if __name__=="__main__":
 	main()

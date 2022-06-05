@@ -1,18 +1,35 @@
 todos:
 
-* Comment!
-	* graph
-	* nodes
-	* route table
-	* aux function
-	* include mthods in class description?
-* function to translate back from INternet to Networkx
-* router table for victim
-* with more than 1 --> osciallations --> still there?
-* graph generation also creates:
-	- attack magnitude limit [a, b]
-	- ally capabilities
-* reproduciability via seed to svae and repeat problematic examples
-* adaptive attack volume
-* attack volume gaussian
-* different attack modes
+IN ORDER OF PRIORITY
+
+PRIORITY 1
+	* Comment!
+		* graph
+		* nodes [DONE]
+		* route table
+		* aux function
+		* include mthods in class description?
+		* file docstrings
+	* Routing Table 
+	* Oscillations
+	* statement retractment
+	* ally selection:
+		- if everything would be there -> by hasing or so ---> each ally (or node) has algorithm telling it, given the current ally supports, whether it shoul dhelp or not
+		- if not all are there, just run algorithm, and update it every time a support comes in
+		- if, after a support cal, it turn sout this ally should help but did support before --> support_retract protocol
+	* TODOs
+
+PRIORITY 2
+	* still not 100 % reproducable -> attack over time is different!! starting attack vol too.
+	* we can have negative probabilities if sum(ally_scrubbing) > attack vol ==> limit the value of "distribute_percentages_to_allies" to 1 somehow
+	* add scrubbing capabilities to victim -> if arrived_attack_vol / (1-sum(ally_traffic_handling_perc)))*100 < scrubbing capabilites --> CALL Of help?
+
+PRIORITY 3
+	* different attack modes
+	* router table for victim
+	* make it somehow, that victim and allies that are rdy to receive, dont have an active next hop (i.e., all percentage 0)
+	-> see generated graph for problem (and in general)
+
+
+
+

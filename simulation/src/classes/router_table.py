@@ -70,28 +70,26 @@ class RoutingTable():
 			self.update()
 
 	def __str__(self):
-		#
+
 		table_str = f"""
 		{self.string_first_last_line}
 		|NR|TIME_ADDED|ID  |ORIGIN  |FROM|DST |NXTHP|   AS_PATH   |SCRUB|PR|PERC|
 		{self.string_first_last_line}
-		{f"{self.new_line}{self.tab*2}{self.string_middle_line}{self.new_line}{self.tab*2}".join([f"|{entry_indx:2}|{entry['time_added']:10}|{str(entry['identifier']):4}|{entry['origin']:8}|{str(entry['recvd_from']):4}|{str(entry['destination']):4}|{entry['next_hop']:5}|{'-'.join([str(x) for x in entry['as_path']]):13}|{str(entry['scrubbing_capabilities']):5}|{str(entry['priority']):2}|{str(int(entry['split_percentage']*100)):3}%|" for entry_indx, entry in enumerate(self.table)])}
+		{f"{self.new_line}{self.tab*2}{self.string_middle_line}{self.new_line}{self.tab*2}".join([f"|{entry_indx:2}|{float(entry['time_added']):10.2}|{str(entry['identifier']):4}|{entry['origin']:8}|{str(entry['recvd_from']):4}|{str(entry['destination']):4}|{entry['next_hop']:5}|{'-'.join([str(x) for x in entry['as_path']]):13}|{str(entry['scrubbing_capabilities']):5}|{str(entry['priority']):2}|{str(int(entry['split_percentage']*100)):3}%|" for entry_indx, entry in enumerate(self.table)])}
 		{self.string_first_last_line}
 		"""
 
 		return table_str
 
 	def update(self):
-		self.logger.info("T1")
+
 		if self.nr_entries: # TODO victim
-			self.logger.info("T2")
 			# updating the split percentages
 
 			# if we didnt increase the origin priority yet:
 			#	case 1) we dont have any ally entries, the original next hop will get 100%
 			#	case 2) we have at least one ally, traffic is split evenly between only the ally paths (TODO, evenly? we could do proportional)
 			if (not self.increased_origin_priority_status):
-				self.logger.info("T3")
 				nr_entries_highest_priority = len([True for entry in self.table if entry["priority"] == self.highest_priority])
 				assigned_percentage = 1 / nr_entries_highest_priority
 				for entry_indx in range(self.nr_entries):
@@ -104,8 +102,6 @@ class RoutingTable():
 			#	case 2) there are allies, which get their share, and the rest goes to victim
 			# NOTE: if we have allies, we assume that "self.attack_vol_on_victim" is already set
 			else:
-				self.logger.info("T4")
-				self.logger.info("MS1")
 				distribute_percentages_to_allies = 0
 
 				# we start off, by removing from the attack volume all allies that have been handled further up the attack path
@@ -119,26 +115,22 @@ class RoutingTable():
 				for entry_indx in range(self.nr_entries):
 					# this IF statement catches all allies that this node is splitting for
 					if (self.table[entry_indx]["priority"] == self.highest_priority) and ("ally" in self.table[entry_indx]["origin"]):
-						self.logger.info("MS2")
-						self.logger.info(entry_indx)
-						self.logger.info(self.table[entry_indx]["scrubbing_capabilities"])
-						self.logger.info(self.attack_vol_on_victim)
 						try:
 							self.table[entry_indx]["split_percentage"] = self.table[entry_indx]["scrubbing_capabilities"] / self.attack_vol_on_victim
 						except:
 							print(self.table, self.table[entry_indx], self.attack_vol_on_victim)
 						distribute_percentages_to_allies += self.table[entry_indx]["scrubbing_capabilities"] / self.attack_vol_on_victim
-						self.logger.info(distribute_percentages_to_allies)
 					# this IF statement catches the original next hop
 					elif (self.table[entry_indx]["priority"] == self.highest_priority) and (self.table[entry_indx]["origin"] == "original"):
-						self.logger.info("MS3")
 						# save its index, since its percentage is set at the end
 						original_next_hop_entry_indx = entry_indx
+					# this is the rest cases, i.e., the ones that have split percentage 0
+					else:
+						self.table[entry_indx]["split_percentage"] = 0
 
 				# at the end, after all allies got there share, distribute the remaining percentage to the original next hop
 				self.table[original_next_hop_entry_indx]["split_percentage"] = 1 - distribute_percentages_to_allies
 
-			# TODO a case where percentages are reset? maybe handled by first if?
 			self.logger.debug(f"[{self.env.now}] Routing Table:{self}")
 
 	def set_highest_priority(self):

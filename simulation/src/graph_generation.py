@@ -147,6 +147,11 @@ def generate_directed_AS_graph(nr_ASes, nr_allies, figures_path, attack_vol_min 
 
     :param nr_ASes: number of AS to be in the graph
     :param nr_allies: number of allies willing to help scrubbing DDoS traffic      
+    :param :
+    :param :
+    :param :
+    :param :
+    :param :
 
     :type nr_ASes: int
     :type nr_allies: int

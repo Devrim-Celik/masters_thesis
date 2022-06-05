@@ -10,6 +10,7 @@
 import random
 import copy
 
+
 class AutonomousSystem(object):
 	"""
 	This class is the representing a standard autonomous system in our simulations.
@@ -130,13 +131,12 @@ class AutonomousSystem(object):
 			=====================================================================
 		""")
 
-		self.logger.info(f"RECEIVED:{pkt['identifier']}")
 		# for standard packets
 		if pkt["pkt_type"] == "STD":
 			self.process_std_pkt(pkt)
 		# for RAT packets
 		elif pkt["pkt_type"] == "RAT":
-			self.logger.info("OK WE THERE")
+
 			########## distributed as specified by the protocol
 			pkt_tmp = copy.deepcopy(pkt) # can we Delete this TODO? --> pretty sure not
 			pkt_tmp["last_hop"] = self.asn
@@ -147,17 +147,14 @@ class AutonomousSystem(object):
 			elif pkt["content"]["relay_type"] == "broadcast":
 				next_hops = list(set(self.ebgp_AS_peers) - {pkt["last_hop"]})
 			self.send_packet(pkt_tmp, next_hops) 
-			self.logger.info("OK WE THERE 2")
-			self.logger.info(str(self.seen_rats))
+
 			############## react to it, if this packet has not already been seen
 			if not pkt["identifier"] in self.seen_rats:
-				self.logger.info("NOT SEEEN")
 				self.seen_rats.append(pkt["identifier"])
 				# call the corresponding reaction
 				if pkt["content"]["protocol"] == "help":
 					self.rat_reaction_help(pkt)
 				elif pkt["content"]["protocol"] == "help_update":
-					self.logger.info("ENTERING")
 					self.rat_reaction_help_update(pkt)
 				elif pkt["content"]["protocol"] == "support":
 					self.rat_reaction_support(pkt)
@@ -239,22 +236,21 @@ class AutonomousSystem(object):
 		:type pkt: dict
 		"""
 		self.logger.info(f"Reacting to Support RAT")
-		# we add a router, only if we dont know if we are on the attack path yet, or, if the router comes not from the attack path
-		if (not self.on_attack_path) or (pkt["last_hop"] != self.attack_path_predecessor): # TODO put this in priority if else, 1 and 3
-			# add the advertised route the routing table
-			entry = {
-				"identifier": "TODO", 
-				"next_hop": pkt["content"]["as_path_to_victim"][pkt["content"]["hc"]-1],
-				"destination": pkt["content"]["as_path_to_victim"][-1], # the router thiinks, the destination is the vicitm, although ally
-				"priority": 3,
-				"split_percentage": None,
-				"scrubbing_capabilities": pkt["content"]["scrubbing_capability"],
-				"as_path": pkt["content"]["as_path_to_victim"][pkt["content"]["hc"]:], # TODO -1 or not???, want to include this node as start
-				"origin": f"ally_{pkt['src']}",
-				"recvd_from": pkt["last_hop"],
-				"time_added": self.env.now
-			}
-			self.router_table.add_entry(entry) # TODO need to trigger some change?
+
+		# add the advertised route the routing table
+		entry = {
+			"identifier": "TODO", 
+			"next_hop": pkt["content"]["as_path_to_victim"][pkt["content"]["hc"]-1],
+			"destination": pkt["content"]["as_path_to_victim"][-1], # the router thiinks, the destination is the vicitm, although ally
+			"priority": 3 if (pkt["last_hop"] != self.attack_path_predecessor) else 1, # depending on whether this node handles this split or not, set the priority
+			"split_percentage": 0,
+			"scrubbing_capabilities": pkt["content"]["scrubbing_capability"],
+			"as_path": pkt["content"]["as_path_to_victim"][pkt["content"]["hc"]:], # TODO -1 or not???, want to include this node as start
+			"origin": f"ally_{pkt['src']}",
+			"recvd_from": pkt["last_hop"],
+			"time_added": self.env.now
+		}
+		self.router_table.add_entry(entry) # TODO need to trigger some change?
 		
 
 
@@ -294,24 +290,27 @@ class AutonomousSystem(object):
 class SourceAS(AutonomousSystem):
 	# TODO can only handle if *args is used, not **kwargs (or we can make it vice verca) --> general soluation
 
+	"""
+	This class represents an autonomous systems, that is the source of attack traffic; it inherits from "AutonomousSystem".
+
+	:param attack_vol_limits:
+	:param attack_freq:
+	:param as_path_to_victim:
+	:param atk_path_signal:
+	:param attack_traffic_recording:
+
+	:type attack_vol_limits: tuple[int, int]
+	:type attack_freq: float
+	:type as_path_to_victim: list[int]
+	:type atk_path_signal: bool
+	:type attack_traffic_recording:	list[float]	
+	"""
+
 	__doc__ += AutonomousSystem.__doc__
 
+
+
 	def __init__(self, *args, **kwargs):
-		"""
-		This class represents an autonomous systems, that is the source of attack traffic; it inherits from "AutonomousSystem".
-
-		:param attack_vol_limits:
-		:param attack_freq:
-		:param as_path_to_victim:
-		:param atk_path_signal:
-		:param attack_traffic_recording:
-
-		:type attack_vol_limits: tuple[int, int]
-		:type attack_freq: float
-		:type as_path_to_victim: list[int]
-		:type atk_path_signal: bool
-		:type attack_traffic_recording:	list[float]	
-		"""
 		
 		super().__init__(*args)
 
@@ -329,7 +328,12 @@ class SourceAS(AutonomousSystem):
 		self.attack_traffic_recording = []
 
 
+
 	def attack_cycle(self):
+		"""	
+		This method, once called, will initiate an attack cycle.
+		"""
+
 
 		self.logger.info(f"[{self.env.now}] Starting attack on {self.as_path_to_victim[-1]} with limits {self.attack_vol_limits} and frequency {self.attack_freq}.")
 
@@ -350,7 +354,16 @@ class SourceAS(AutonomousSystem):
 			atk_indx += 1
 
 
+
 	def rat_reaction_help(self, pkt):
+		"""
+		This method represents the reaction of a DDoS source AS to receiving a help protocol RAT message.
+		The main reaction revolves around issuing a RAT that will determine the attack path.
+
+		:param pkt: the incoming packets
+
+		:type pkt: dict
+		"""
 		self.router_table.update_attack_volume(pkt["content"]["attack_volume"])
 
 		if (pkt["content"]["attacker_asn"] == self.asn) and (not self.atk_path_signal):
@@ -372,10 +385,37 @@ class SourceAS(AutonomousSystem):
 			# own reaction: 
 			self.router_table.increase_original_priority()
 
+
+
 	def __str__(self):
 		return f"AS-{self.asn} (Source) [{self.attack_vol_limits}]"
 
+
+
+
+
+
 class VictimAS(AutonomousSystem):
+
+	"""
+	This class represents an autonomous systems, that is the victim of DDoS attack traffic; it inherits 
+	from "AutonomousSystem".
+
+	:param scrubbing_cap:
+	:param as_path_to_victim:
+	:param help_signal_issued:
+	:param nr_help_updates:
+	:param ally_help:
+
+	:type scrubbing_cap: int
+	:type as_path_to_victim: list[int]
+	:type help_signal_issued: bool
+	:type nr_help_updates: int
+	:type ally_help: dict	
+	"""
+
+	__doc__ += AutonomousSystem.__doc__
+
 	# TODO can only handle if *args is used, not **kwargs (or we can make it vice verca) --> general soluation
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args)
@@ -393,10 +433,12 @@ class VictimAS(AutonomousSystem):
 		self.nr_help_updates = 0
 
 		# used to keep track of the attack traffic
-		self.attack_volume_sma = None
+		self.attack_volume_approx = None
 
 		# denote the allies that help
 		self.ally_help = {}
+
+
 
 
 	def attack_vol_approximation(self):
@@ -407,8 +449,19 @@ class VictimAS(AutonomousSystem):
 		return self.received_attacks[-1][1]
 
 
+
 	def attack_reaction(self, pkt):
-		
+		"""
+		This method represents the reaction of a victim node to receiving an DDoS attack packet. The first it gets attack,
+		it will issue a help statement to alert allies and the source AS. Subsequent attack packets are used to estimate
+		the current attack volume (which might change over time) and then are broadcasted, in order to correctly adapt
+		splitting rates.
+
+		:param pkt: the incoming packets
+
+		:type pkt: dict
+		"""
+
 		self.logger.info(f"[{self.env.now}] Attack Packet with ID {pkt['identifier']} arrived with magnitutde {pkt['content']['attack_volume']} Gbps.")
 		self.received_attacks.append((self.env.now, pkt["content"]["attack_volume"]))
 
@@ -437,30 +490,71 @@ class VictimAS(AutonomousSystem):
 
 
 	def rat_reaction_support(self, pkt):
+		"""
+		This method represents the reaction of a victim node to receiving an support RAT message. It will denote
+		the available scrubbing capabilities of the ally, in order to, later, more accurately approximate the original
+		attack volume.
+
+		:param pkt: the incoming packets
+
+		:type pkt: dict
+		"""
 		self.ally_help[f"ally{pkt['src']}"] = pkt["content"]["scrubbing_capability"]
+
+
 
 	def __str__(self):
 		return f"AS-{self.asn} (Victim)"
 
+
+
+
+
 class AllyAS(AutonomousSystem):
 	# TODO can only handle if *args is used, not **kwargs (or we can make it vice verca) --> general soluation
+
+	"""
+	This class represents an autonomous systems, that is the victim of DDoS attack traffic; it inherits 
+	from "AutonomousSystem".
+
+	:param scrubbing_cap:
+	:param as_path_to_victim:
+
+	:type scrubbing_cap: int
+	:type as_path_to_victim: list[int]
+	"""
+
+	__doc__ += AutonomousSystem.__doc__
+
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args)
 
 		# remember scrubbing capabilitiy
 		self.scrubbing_cap = args[-1]["scrubbing_capability"]
 		
-		# TODO
+		# the path to the victim
 		self.as_path_to_victim = args[-1]["as_path_to_victim"]
-		
-		# used to recognize, whether a help signal has already been issued
-		self.help_signal_issued = False	
 
 
 	def rat_reaction_help(self, pkt):
+		"""
+		This method represents the reaction of a ally node to receiving an help RAT message. It will broadcast a 
+		support message, letting other nodes know that they may reroute DDoS traffic to this ally and how much this
+		ally can scrub.
+
+		:param pkt: the incoming packets
+
+		:type pkt: dict
+		"""
+		
+		# firstly denote the current amount of attack volume on the victim
 		self.router_table.update_attack_volume(pkt["content"]["attack_volume"])
 		self.logger.info(f"[{self.env.now}] Help registered. Sending Support.")
+
+		# add the address of the victim node to the set of addresses this AS is ready to accept packets for
 		self.advertised.append(self.as_path_to_victim[-1])
+
+		# send out the support message
 		pkt = {
 			"identifier": f"support_from_{self.asn}",
 			"pkt_type": "RAT",
@@ -470,6 +564,8 @@ class AllyAS(AutonomousSystem):
 			"content": {"relay_type": "original_next_hop", "scrubbing_capability": self.scrubbing_cap, "protocol": "support", "ally": self.asn, "as_path_to_victim": self.as_path_to_victim, "hc": 0}
 		}
 		self.send_packet(pkt, self.router_table.determine_highest_original())
+
+
 
 	def __str__(self):
 		return f"AS-{self.asn} (Ally) [{self.scrubbing_cap}]"

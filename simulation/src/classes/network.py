@@ -4,6 +4,8 @@ import string
 import copy
 import matplotlib.pyplot as plt
 import seaborn as sns
+import networkx as nx
+from pyvis.network import Network
 
 from .nodes import AutonomousSystem, SourceAS, VictimAS, AllyAS
 from .router_table import RoutingTable
@@ -238,4 +240,57 @@ class Internet(object):
 		plt.tight_layout()
 		plt.savefig(f"{self.figure_subpath}/recorded_attack_traffic.png", dpi = 400)
 		plt.savefig(f"{self.figure_subpath}/recorded_attack_traffic.svg", dpi = 400)
-		
+		plt.show()
+
+	def generate_networkx_graph(self, changed_edge_color = "purple", removed_edge_color = "red"):
+
+		# NOTE: if we do a retreat statement, then it will return back to normal
+		# MORE INTERESTING: during help call active
+
+
+		# initialize a directed graph
+		graph = nx.DiGraph()
+
+		# add the nodes
+		graph.add_nodes_from(range(self.nr_ASes))
+
+		# add the edges, node by node
+		for node_indx in range(self.nr_ASes):
+			graph.nodes[node_indx]["role"] = "standard"
+			for entry in self.ASes[node_indx].router_table.table:
+				if entry["split_percentage"] > 0:
+					graph.add_edge(node_indx, entry["next_hop"])
+					graph[node_indx][entry["next_hop"]]["split_percentage"] = entry["split_percentage"] 
+
+		# denote the special nodes
+		graph.nodes[self.source.asn]["role"] = "source"
+		graph.nodes[self.source.asn]["color"] = "red"
+		graph.nodes[self.victim.asn]["role"] = "victim"
+		graph.nodes[self.victim.asn]["color"] = "green"
+		for ally_AS in self.allies:	
+			graph.nodes[ally_AS.asn]["role"] = "ally"
+			graph.nodes[ally_AS.asn]["role"] = "blue"
+
+
+		# denote changed and removed edges:
+		for u, v in self.init_graph.edges:
+			# is in
+			if (u, v) in graph.edges:
+				pass
+			# was changed
+			elif (v, u) in graph.edges:
+				graph[v][u]["color"] = changed_edge_color
+			# not in there anymore
+			else:
+				pass
+
+		# save figure
+		net = Network(
+			notebook = True, 
+			directed = True, 
+			height = '1000px', 
+			width = "100%"
+		)
+		net.inherit_edge_colors(False)
+		net.from_nx(graph)
+		net.save_graph(f"{self.figure_subpath}/generated_graph.html")
