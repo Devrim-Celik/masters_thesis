@@ -58,6 +58,8 @@ class AutonomousSystem(object):
 		self.attack_path_predecessor = None
 		self.new_line = "\n"
 		self.tab = "\t"
+		# TODO include in docstinrg: a list nodes that are currently asking for help
+		self.helping_node = []
 
 
 
@@ -156,6 +158,8 @@ class AutonomousSystem(object):
 					self.rat_reaction_help(pkt)
 				elif pkt["content"]["protocol"] == "help_update":
 					self.rat_reaction_help_update(pkt)
+				elif pkt["content"]["protocol"] == "help_retractment":
+					self.rat_reaction_help_retractment(pkt)
 				elif pkt["content"]["protocol"] == "support":
 					self.rat_reaction_support(pkt)
 				elif pkt["content"]["protocol"] == "attack_path":
@@ -210,6 +214,36 @@ class AutonomousSystem(object):
 		self.router_table.update_attack_volume(pkt["content"]["attack_volume"])
 
 
+	def rat_reaction_help_retractment(self, pkt):
+		""" 
+
+		:param pkt: the incoming packets
+
+		:type pkt: dict
+		"""
+		self.logger.info(f"Reacting to Help Retractment RAT")
+		self.router_table.reset()
+		self.helping_node = []
+
+		# reset any attribute that might have been set
+		# TODO check if this really works
+		if hasattr(self, "on_attack_path"):
+			self.on_attack_path = False
+		if hasattr(self, "attack_path_predecessor"):
+			self.attack_path_predecessor = None
+		if hasattr(self, "atk_path_signal"):
+			self.atk_path_signal = False
+		if hasattr(self, "nr_help_updates"):
+			self.nr_help_updates = 0
+		if hasattr(self, "attack_volume_approx"):
+			self.attack_volume_approx = None
+		if hasattr(self, "ally_help"):
+			self.ally_help = {}
+		if hasattr(self, "supporting_allies"):
+			self.supporting_allies = {}
+			
+
+
 	def rat_reaction_help(self, pkt):
 		"""
 		This method implements the response to receiving a RAT packet, with the help protocol. A default AS will simply
@@ -220,6 +254,7 @@ class AutonomousSystem(object):
 		:type pkt: dict
 		"""
 		self.logger.info(f"Reacting to Help RAT")
+		self.helping_node.append(pkt["src"])
 		self.router_table.update_attack_volume(pkt["content"]["attack_volume"])
 
 
@@ -235,23 +270,24 @@ class AutonomousSystem(object):
 
 		:type pkt: dict
 		"""
-		self.logger.info(f"Reacting to Support RAT")
+		if pkt["content"]["as_path_to_victim"][-1] in self.helping_node:
+			self.logger.info(f"Reacting to Support RAT")
 
-		# add the advertised route the routing table
-		entry = {
-			"identifier": "TODO", 
-			"next_hop": pkt["content"]["as_path_to_victim"][pkt["content"]["hc"]-1],
-			"destination": pkt["content"]["as_path_to_victim"][-1], # the router thiinks, the destination is the vicitm, although ally
-			"priority": 3 if (pkt["last_hop"] != self.attack_path_predecessor) else 1, # depending on whether this node handles this split or not, set the priority
-			"split_percentage": 0,
-			"scrubbing_capabilities": pkt["content"]["scrubbing_capability"],
-			"as_path": pkt["content"]["as_path_to_victim"][pkt["content"]["hc"]:], # TODO -1 or not???, want to include this node as start
-			"origin": f"ally_{pkt['src']}",
-			"recvd_from": pkt["last_hop"],
-			"time_added": self.env.now
-		}
-		self.router_table.add_entry(entry) # TODO need to trigger some change?
-		
+			# add the advertised route the routing table
+			entry = {
+				"identifier": "TODO", 
+				"next_hop": pkt["content"]["as_path_to_victim"][pkt["content"]["hc"]-1],
+				"destination": pkt["content"]["as_path_to_victim"][-1], # the router thiinks, the destination is the vicitm, although ally
+				"priority": 3 if (pkt["last_hop"] != self.attack_path_predecessor) else 1, # depending on whether this node handles this split or not, set the priority
+				"split_percentage": 0,
+				"scrubbing_capabilities": pkt["content"]["scrubbing_capability"],
+				"as_path": pkt["content"]["as_path_to_victim"][pkt["content"]["hc"]:], # TODO -1 or not???, want to include this node as start
+				"origin": f"ally_{pkt['src']}",
+				"recvd_from": pkt["last_hop"],
+				"time_added": self.env.now
+			}
+			self.router_table.add_entry(entry) # TODO need to trigger some change?
+			
 
 
 
@@ -340,7 +376,7 @@ class SourceAS(AutonomousSystem):
 		atk_indx = 0
 		while True:
 			yield self.env.timeout(self.attack_freq)
-			attack_volume = random.randint(*self.attack_vol_limits) + random.randint(-10, 10) + atk_indx*5
+			attack_volume = random.randint(*self.attack_vol_limits) + random.randint(-3, 3) + abs(self.env.now-100) * 12 - 400
 			self.attack_traffic_recording.append((self.env.now, attack_volume))
 			pkt = {
 				"identifier": f"Attack_Packet_{self.asn}_{atk_indx}",
@@ -365,6 +401,7 @@ class SourceAS(AutonomousSystem):
 		:type pkt: dict
 		"""
 		self.router_table.update_attack_volume(pkt["content"]["attack_volume"])
+		self.helping_node.append(pkt["src"])
 
 		if (pkt["content"]["attacker_asn"] == self.asn) and (not self.atk_path_signal):
 			# attack path signal
@@ -372,7 +409,7 @@ class SourceAS(AutonomousSystem):
 			self.on_attack_path = True
 			self.logger.info(f"[{self.env.now}] Help registered. Determining Attack Path.")
 			pkt = {
-				"identifier": f"atk_path_signal_form_{self.asn}",
+				"identifier": f"atk_path_signal_from_{self.asn}_{float(self.env.now):6.2}",
 				"pkt_type": "RAT",
 				"src": self.asn,
 				"dst": None,
@@ -438,7 +475,10 @@ class VictimAS(AutonomousSystem):
 		# denote the allies that help
 		self.ally_help = {}
 
-
+		# to note when the last retractment was made, in order to not hastily issue a new help RAT
+		self.last_retractment = -10000000
+		# and a variable for a threshold
+		self.new_help_signal_threshold = 25
 
 
 	def attack_vol_approximation(self):
@@ -447,6 +487,17 @@ class VictimAS(AutonomousSystem):
 		# 	but moving average to slow --> we dont want average, but current approximation
 		#	also a threshold would be nice, so that it doesnt trigger every attack, but only when too much deviation
 		return self.received_attacks[-1][1]
+
+
+	def help_condition(self, nr_time_steps = 5, min_atk_pkts = 3): # TODO this as attributes
+
+		atk_pkts = 0
+
+		for atk_time, atk_vol in self.received_attacks:
+			if (atk_time > self.env.now - nr_time_steps) and 	(self.attack_vol_approximation() + sum(self.ally_help.values()) > self.scrubbing_cap):
+				atk_pkts += 1
+		
+		return (atk_pkts >= min_atk_pkts) and (self.env.now - self.last_retractment) > self.new_help_signal_threshold
 
 
 
@@ -466,26 +517,44 @@ class VictimAS(AutonomousSystem):
 		self.received_attacks.append((self.env.now, pkt["content"]["attack_volume"]))
 
 
-		pkt = {
+		help_pkt = {
 			"identifier": None,
 			"pkt_type": "RAT",
 			"src": self.asn,
 			"dst": None,
 			"last_hop": self.asn, 
-			"content": {"attack_volume": self.attack_vol_approximation() + sum(self.ally_help.values()), "attacker_asn": pkt["src"], "relay_type": "broadcast", "protocol": None, "hc": 0}
+			"content": None
 		}
-		if not self.help_signal_issued:
+
+		# TODO since sometimes the allies get less then they can (because of attack approximation being delayed in a sense),
+		# we add this weird correcting scala
+		TODO_CORRECTING_SCALA = 0.75
+
+		if not self.help_signal_issued and self.help_condition(): # Case: We need Help
 			self.logger.info(f"[{self.env.now}] Attack registered. Calling for help.")
+			self.network.plot_values["victim_help_calls"].append((self.env.now, self.received_attacks[-1][1]))
 			self.help_signal_issued = True
-			pkt["identifier"] = "help"
-			pkt["content"]["protocol"] = "help"
-		else:
+			help_pkt["identifier"] = f"help_{float(self.env.now):6.2}"
+			help_pkt["content"] = {"attack_volume": self.attack_vol_approximation() + sum(self.ally_help.values()), 
+												"attacker_asn": pkt["src"], "relay_type": "broadcast", "protocol": "help", "hc": 0}
+		elif self.help_signal_issued and TODO_CORRECTING_SCALA*(self.attack_vol_approximation() + sum(self.ally_help.values())) < self.scrubbing_cap:# Case: We do not need help anymore # TODO now is kinda bad condition (onyl one below capabilities package might be too hasty --> need like a counter since when it has been like this)
+			self.logger.info(f"[{self.env.now}] Issueing Help Retractment.")
+			self.network.plot_values["victim_help_retractment_calls"].append((self.env.now, self.received_attacks[-1][1]))
+			self.help_signal_issued = False
+			help_pkt["identifier"] = f"help_retractment_{float(self.env.now):6.2}"
+			self.last_retractment = self.env.now
+			# TODO right now we broadcast this pkt, but, we could also say: do only broadcast it to ebgp peers from which you received a support or attack_path protocol RAT
+			help_pkt["content"] = {"attacker_asn": pkt["src"], "relay_type": "broadcast", "protocol": "help_retractment", "hc": 0}
+
+		elif self.help_signal_issued: # TODO elif self.help_signal_issued
 			self.logger.info(f"[{self.env.now}] Attack registered. Sending out update message.")
-			pkt["identifier"] = f"help_update{self.nr_help_updates}"
-			pkt["content"]["protocol"] = "help_update"
+			help_pkt["identifier"] = f"help_update{self.nr_help_updates}_{float(self.env.now):6.2}"
+			help_pkt["content"] = {"attack_volume": self.attack_vol_approximation() + sum(self.ally_help.values()), 
+									"attacker_asn": pkt["src"], "relay_type": "broadcast", "protocol": "help_update", "hc": 0}
 			self.nr_help_updates += 1
 
-		self.send_packet(pkt, self.ebgp_AS_peers)
+		if help_pkt["identifier"] != None: # to chec that we even have a pkt set to send
+			self.send_packet(help_pkt, self.ebgp_AS_peers)
 
 
 
@@ -499,12 +568,13 @@ class VictimAS(AutonomousSystem):
 
 		:type pkt: dict
 		"""
-		self.ally_help[f"ally{pkt['src']}"] = pkt["content"]["scrubbing_capability"]
+		if self.help_signal_issued:
+			self.ally_help[f"ally{pkt['src']}"] = pkt["content"]["scrubbing_capability"]
 
 
 
 	def __str__(self):
-		return f"AS-{self.asn} (Victim)"
+		return f"AS-{self.asn} (Victim) [{self.scrubbing_cap}]"
 
 
 
@@ -535,6 +605,8 @@ class AllyAS(AutonomousSystem):
 		# the path to the victim
 		self.as_path_to_victim = args[-1]["as_path_to_victim"]
 
+		# a list of all supporting allies
+		self.supporting_allies = {}
 
 	def rat_reaction_help(self, pkt):
 		"""
@@ -553,10 +625,11 @@ class AllyAS(AutonomousSystem):
 
 		# add the address of the victim node to the set of addresses this AS is ready to accept packets for
 		self.advertised.append(self.as_path_to_victim[-1])
+		self.helping_node.append(pkt["src"])
 
 		# send out the support message
 		pkt = {
-			"identifier": f"support_from_{self.asn}",
+			"identifier": f"support_from_{self.asn}_{float(self.env.now):6.2}",
 			"pkt_type": "RAT",
 			"src": self.asn,
 			"dst": None,

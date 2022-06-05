@@ -70,7 +70,7 @@ class RoutingTable():
 			self.update()
 
 	def __str__(self):
-
+		
 		table_str = f"""
 		{self.string_first_last_line}
 		|NR|TIME_ADDED|ID  |ORIGIN  |FROM|DST |NXTHP|   AS_PATH   |SCRUB|PR|PERC|
@@ -83,9 +83,11 @@ class RoutingTable():
 
 	def update(self):
 
+		self.set_highest_priority()
+
 		if self.nr_entries: # TODO victim
 			# updating the split percentages
-
+			self.logger.info("S")
 			# if we didnt increase the origin priority yet:
 			#	case 1) we dont have any ally entries, the original next hop will get 100%
 			#	case 2) we have at least one ally, traffic is split evenly between only the ally paths (TODO, evenly? we could do proportional)
@@ -185,3 +187,19 @@ class RoutingTable():
 		self.increased_origin_priority_status = True
 		self.set_highest_priority()
 		self.update()
+
+	def decrease_original_priority(self):
+		for entry_indx in range(self.nr_entries):
+			if self.table[entry_indx]["priority"] == self.__priority_table__["split_used_original"] and self.table[entry_indx]["origin"] == "original":
+				self.table[entry_indx]["priority"] = self.__priority_table__["initial_used_original"]
+		self.increased_origin_priority_status = False
+		self.set_highest_priority()
+		self.update()
+
+	def reset(self):
+		# remove all allies
+		self.table = [entry for entry in self.table if entry["origin"] == "original"]
+		self.nr_entries = len(self.table)
+		# decrease the original priority (and also update included)
+		self.set_highest_priority()
+		self.decrease_original_priority()

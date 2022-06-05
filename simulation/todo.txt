@@ -33,3 +33,18 @@ PRIORITY 3
 
 
 
+NOTES: Retractment:
+* Issue 1: Sometimes Ally disappears and ally takes full load
+
+
+
+CASUAL ERRORS:
+
+Traceback (most recent call last):
+  File "simulation_main.py", line 76, in <module>
+    main()
+  File "simulation_main.py", line 70, in main
+    net.plot()
+  File "/home/dcelik/Documents/masters_thesis/simulation/src/classes/network.py", line 236, in plot
+    plt.scatter(*list(zip(*sink.received_attacks)), s= 1, c = "black")
+TypeError: scatter() missing 2 required positional arguments: 'x' and 'y

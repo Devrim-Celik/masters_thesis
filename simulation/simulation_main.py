@@ -35,7 +35,7 @@ def run_simulation(
 
 
 
-def main(nr_ASes = 300, nr_allies = 4, max_sim_length = 100, propagation_delay = 3, attack_freq = 1):
+def main(nr_ASes = 300, nr_allies = 3, max_sim_length = 200, propagation_delay = 3, attack_freq = 1):
 	# current date and time, used to name this simulation
 	time_date_str = datetime.now().strftime("%d:%m:%Y_%H:%M:%S")
 

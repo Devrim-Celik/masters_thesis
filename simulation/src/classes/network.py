@@ -66,6 +66,12 @@ class Internet(object):
 		self.ASes = []
 		self.allies = []
 
+		self.plot_values = {
+			"victim_scrubbing_capabilitiy": None,
+			"victim_help_calls": [],
+			"victim_help_retractment_calls": []
+		}
+
 		# translate the networkx nodes to AutonomousSystem classes
 		for node_indx in graph.nodes:
 
@@ -110,7 +116,8 @@ class Internet(object):
 				additional_attr["attack_vol_limits"] = graph.nodes[node_indx]["attack_vol_limits"]
 				additional_attr["attack_freq"] = attack_freq
 			elif role == "victim":
-				additional_attr["scrubbing_capability"] = None # TODO do we need this?
+				additional_attr["scrubbing_capability"] = graph.nodes[node_indx]["scrubbing_cap"]
+				self.plot_values["victim_scrubbing_capabilitiy"] = graph.nodes[node_indx]["scrubbing_cap"]
 			elif role == "ally":
 				additional_attr["scrubbing_capability"] = graph.nodes[node_indx]["scrubbing_cap"]
 
@@ -220,21 +227,31 @@ class Internet(object):
 				* attack path call out [maybe]
 				* support call from each ally [maybe]
 				* retreat call
+			* horizontal lines:
+				* ally capability
 		"""
 		
-		plt.figure("Arrived DDoS Traffic", figsize=(16, 10))
-		plt.title("Recorded Attack Traffic from all Sinks")
+		plt.figure("DDoS Traffic Recordings", figsize=(16, 10))
+		plt.title("DDoS Traffic Recordings")
 		plt.grid()
 		plt.ylim(0, 2000)
 
 		# plot attack traffic
 		plt.scatter(*list(zip(*self.source.attack_traffic_recording)), s= 2, c = "black")
-		plt.plot(*list(zip(*self.source.attack_traffic_recording)), label = str(self.source), c = "black", lw= 0.5)
+		plt.plot(*list(zip(*self.source.attack_traffic_recording)), label = f"Sent by {str(self.source)}", c = "black", lw= 0.5)
 
 		# plot all sinks (victim + allies)
 		for sink in self.allies + [self.victim]:
 			plt.scatter(*list(zip(*sink.received_attacks)), s= 1, c = "black")
-			plt.plot(*list(zip(*sink.received_attacks)), label = str(sink), lw= 0.3)
+			plt.plot(*list(zip(*sink.received_attacks)), label = f"Received by {str(sink)}", lw= 0.3)
+
+		plt.hlines(y = self.plot_values["victim_scrubbing_capabilitiy"], xmin = 0, xmax = self.victim.received_attacks[-1][0], color = "black", label = "victim_scrubbing_capability")
+
+		# TODO arrows invisible
+		for tp, val in self.plot_values["victim_help_calls"]:
+			plt.annotate("HELP", (tp, val), xytext = (tp, max(val, self.plot_values["victim_scrubbing_capabilitiy"]) + 250))
+		for tp, val in self.plot_values["victim_help_retractment_calls"]:
+			plt.annotate("RETRACT\nHELP", (tp, val), xytext = (tp, max(val, self.plot_values["victim_scrubbing_capabilitiy"]) + 100))
 
 		plt.legend(loc = "upper right")
 		plt.tight_layout()
