@@ -86,8 +86,8 @@ class Internet(object):
 				"next_hop": out_node,
 				"destination": victim_indx,
 				"priority": 1,
-				"split_percentage": None,
-				"scrubbing_capabilities": None,
+				"split_percentage": 0,
+				"scrubbing_capabilities": 0,
 				"as_path": [],
 				"origin": "original",
 				"recvd_from": node_indx, # we just assume it comes from itself
@@ -178,12 +178,13 @@ class Internet(object):
 													# TODO may be replaceable by introducing small delay in for loop. do same for method below
 		# split the attack traffic, according to proportions of the given routing table
 		for next_hop, percentage in next_hops_w_perc:
-			tmp_pkt = copy.deepcopy(pkt)
-			modified_content = {k:v for k, v in pkt["content"].items()}
-			modified_content["attack_volume"] = attack_vol * percentage
-			tmp_pkt["content"] = modified_content
-			tmp_pkt["next_hop"] = next_hop
-			self.ASes[next_hop].process_pkt(tmp_pkt)
+			if percentage > 0:
+				tmp_pkt = copy.deepcopy(pkt)
+				modified_content = {k:v for k, v in pkt["content"].items()}
+				modified_content["attack_volume"] = attack_vol * percentage
+				tmp_pkt["content"] = modified_content
+				tmp_pkt["next_hop"] = next_hop
+				self.ASes[next_hop].process_pkt(tmp_pkt)
 
 
 

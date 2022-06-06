@@ -205,6 +205,6 @@ def generate_directed_AS_graph(nr_ASes, nr_allies, figures_path, attack_vol_min 
     for ally_indx in allies:
         tmp = min(random.randint(0, remaining), 100)
         G.nodes[ally_indx]["scrubbing_cap"] = tmp + scrubbing_cap_min
-        remaining -= tmp
+        remaining -= tmp # todo uncomment
 
     return G, victim, adversary, allies

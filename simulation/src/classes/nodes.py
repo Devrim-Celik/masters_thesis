@@ -9,7 +9,7 @@
 
 import random
 import copy
-
+import operator
 
 class AutonomousSystem(object):
 	"""
@@ -144,11 +144,15 @@ class AutonomousSystem(object):
 			pkt_tmp["last_hop"] = self.asn
 			if pkt["content"]["relay_type"] == "next_hop": # TODO when do we use this??? check this pls
 				next_hops = self.router_table.determine_next_hops(dst)
+				self.send_packet(pkt_tmp, next_hops) 
 			elif pkt["content"]["relay_type"] == "original_next_hop":
 				next_hops = self.router_table.determine_highest_original()
+				self.send_packet(pkt_tmp, next_hops) 
 			elif pkt["content"]["relay_type"] == "broadcast":
 				next_hops = list(set(self.ebgp_AS_peers) - {pkt["last_hop"]})
-			self.send_packet(pkt_tmp, next_hops) 
+				self.send_packet(pkt_tmp, next_hops) 
+			elif pkt["content"]["relay_type"] == "no_relay":
+				pass
 
 			############## react to it, if this packet has not already been seen
 			if not pkt["identifier"] in self.seen_rats:
@@ -164,8 +168,11 @@ class AutonomousSystem(object):
 					self.rat_reaction_support(pkt)
 				elif pkt["content"]["protocol"] == "attack_path":
 					self.rat_reaction_attack_path(pkt)
+				elif pkt["content"]["protocol"] == "ally_exchange":
+					self.rat_reaction_ally_exchange(pkt)
 
-
+	def rat_reaction_ally_exchange(self, pkt):
+		pass
 
 	def process_std_pkt(self, pkt):
 		"""
@@ -240,7 +247,7 @@ class AutonomousSystem(object):
 		if hasattr(self, "ally_help"):
 			self.ally_help = {}
 		if hasattr(self, "supporting_allies"):
-			self.supporting_allies = {}
+			self.supporting_allies = []
 			
 
 
@@ -287,8 +294,6 @@ class AutonomousSystem(object):
 				"time_added": self.env.now
 			}
 			self.router_table.add_entry(entry) # TODO need to trigger some change?
-			
-
 
 
 	def rat_reaction_attack_path(self, pkt):
@@ -376,7 +381,20 @@ class SourceAS(AutonomousSystem):
 		atk_indx = 0
 		while True:
 			yield self.env.timeout(self.attack_freq)
-			attack_volume = random.randint(*self.attack_vol_limits) + random.randint(-3, 3) + abs(self.env.now-100) * 12 - 400
+
+			# TODO just to simualte something
+			if self.env.now <= 100:
+				addition_factor = 400
+			elif 100 < self.env.now <= 130:
+				addition_factor = (self.env.now - 100) * 13.3
+			elif 130 < self.env.now <= 230:
+				addition_factor = - random.randint(*self.attack_vol_limits) 
+			elif 230 < self.env.now <= 300:
+				addition_factor = (self.env.now - 230) * 10
+			elif 300 < self.env.now:
+				addition_factor = 700
+
+			attack_volume = random.randint(*self.attack_vol_limits) + addition_factor
 			self.attack_traffic_recording.append((self.env.now, attack_volume))
 			pkt = {
 				"identifier": f"Attack_Packet_{self.asn}_{atk_indx}",
@@ -477,8 +495,14 @@ class VictimAS(AutonomousSystem):
 
 		# to note when the last retractment was made, in order to not hastily issue a new help RAT
 		self.last_retractment = -10000000
+		self.last_help = -10000000
+
 		# and a variable for a threshold
-		self.new_help_signal_threshold = 25
+		self.new_signal_threshold = 25
+
+		# help update threshold before new one
+		self.help_update_pkt_threshold = 10
+		self.help_update_pkt_ctr = self.help_update_pkt_threshold
 
 
 	def attack_vol_approximation(self):
@@ -489,7 +513,7 @@ class VictimAS(AutonomousSystem):
 		return self.received_attacks[-1][1]
 
 
-	def help_condition(self, nr_time_steps = 5, min_atk_pkts = 3): # TODO this as attributes
+	def help_condition(self, nr_time_steps = 5, min_atk_pkts = 5): # TODO this as attributes
 
 		atk_pkts = 0
 
@@ -497,8 +521,19 @@ class VictimAS(AutonomousSystem):
 			if (atk_time > self.env.now - nr_time_steps) and 	(self.attack_vol_approximation() + sum(self.ally_help.values()) > self.scrubbing_cap):
 				atk_pkts += 1
 		
-		return (atk_pkts >= min_atk_pkts) and (self.env.now - self.last_retractment) > self.new_help_signal_threshold
+		return (atk_pkts >= min_atk_pkts) and (self.env.now - self.last_retractment) > self.new_signal_threshold
 
+
+	def retractment_condition(self, nr_time_steps = 5, min_atk_pkts = 5):
+
+
+		atk_pkts = 0
+
+		for atk_time, atk_vol in self.received_attacks:
+			if (atk_time > self.env.now - nr_time_steps) and 	(self.attack_vol_approximation() + sum(self.ally_help.values()) < self.scrubbing_cap):
+				atk_pkts += 1
+		
+		return (atk_pkts >= min_atk_pkts) and (self.env.now - self.last_help) > self.new_signal_threshold
 
 
 	def attack_reaction(self, pkt):
@@ -534,10 +569,11 @@ class VictimAS(AutonomousSystem):
 			self.logger.info(f"[{self.env.now}] Attack registered. Calling for help.")
 			self.network.plot_values["victim_help_calls"].append((self.env.now, self.received_attacks[-1][1]))
 			self.help_signal_issued = True
+			self.last_help = self.env.now
 			help_pkt["identifier"] = f"help_{float(self.env.now):6.2}"
 			help_pkt["content"] = {"attack_volume": self.attack_vol_approximation() + sum(self.ally_help.values()), 
 												"attacker_asn": pkt["src"], "relay_type": "broadcast", "protocol": "help", "hc": 0}
-		elif self.help_signal_issued and TODO_CORRECTING_SCALA*(self.attack_vol_approximation() + sum(self.ally_help.values())) < self.scrubbing_cap:# Case: We do not need help anymore # TODO now is kinda bad condition (onyl one below capabilities package might be too hasty --> need like a counter since when it has been like this)
+		elif self.help_signal_issued and self.retractment_condition():# Case: We do not need help anymore # TODO now is kinda bad condition (onyl one below capabilities package might be too hasty --> need like a counter since when it has been like this)
 			self.logger.info(f"[{self.env.now}] Issueing Help Retractment.")
 			self.network.plot_values["victim_help_retractment_calls"].append((self.env.now, self.received_attacks[-1][1]))
 			self.help_signal_issued = False
@@ -546,12 +582,17 @@ class VictimAS(AutonomousSystem):
 			# TODO right now we broadcast this pkt, but, we could also say: do only broadcast it to ebgp peers from which you received a support or attack_path protocol RAT
 			help_pkt["content"] = {"attacker_asn": pkt["src"], "relay_type": "broadcast", "protocol": "help_retractment", "hc": 0}
 
-		elif self.help_signal_issued: # TODO elif self.help_signal_issued
-			self.logger.info(f"[{self.env.now}] Attack registered. Sending out update message.")
-			help_pkt["identifier"] = f"help_update{self.nr_help_updates}_{float(self.env.now):6.2}"
-			help_pkt["content"] = {"attack_volume": self.attack_vol_approximation() + sum(self.ally_help.values()), 
-									"attacker_asn": pkt["src"], "relay_type": "broadcast", "protocol": "help_update", "hc": 0}
-			self.nr_help_updates += 1
+		elif self.help_signal_issued: # we need a conditon there that decides when it changed enough instead o f this counter TODO
+			# condition, so not to over send, causes problem since everything changes
+			self.help_update_pkt_ctr += 1
+			if self.help_update_pkt_ctr >= self.help_update_pkt_threshold:
+				self.help_update_pkt_ctr = 0
+
+				self.logger.info(f"[{self.env.now}] Attack registered. Sending out update message.")
+				help_pkt["identifier"] = f"help_update{self.nr_help_updates}_{float(self.env.now):6.2}"
+				help_pkt["content"] = {"attack_volume": self.attack_vol_approximation() + sum(self.ally_help.values()), 
+										"attacker_asn": pkt["src"], "relay_type": "broadcast", "protocol": "help_update", "hc": 0}
+				self.nr_help_updates += 1
 
 		if help_pkt["identifier"] != None: # to chec that we even have a pkt set to send
 			self.send_packet(help_pkt, self.ebgp_AS_peers)
@@ -606,7 +647,66 @@ class AllyAS(AutonomousSystem):
 		self.as_path_to_victim = args[-1]["as_path_to_victim"]
 
 		# a list of all supporting allies
-		self.supporting_allies = {}
+		self.supporting_allies = []
+
+		self.help_encountered = False
+
+	def decide_to_help(self):
+		# sort first by ally asn, in order to have it the same everywhere
+		self.supporting_allies.sort(key=operator.itemgetter('ally_asn'))
+
+		# TODO we do not consider ally scrubbing capabilities... simply subtract that from intiial attack vol 
+		# NOTE we assume that attack vol is already set in table
+		success, result = self.dynamic_programming(len(self.supporting_allies) - 1, self.attack_vol_on_victim)
+
+		# if the method didnt succeed, this means that we dont have enough, i.e., this one should help
+		# else, check that it is used
+		return (not success) or any([self.supporting_allies[used]["ally_asn"] == self.asn for used in result["used_allies"]])
+
+	def dynamic_programming(self, max_ally_indx, remaining_traffic):
+		# base cases
+		if remaining_traffic <= 0:
+			return True, {"unique_edges": [], "used_allies": []}
+		elif max_ally_indx < 0:
+			return False, None
+
+		# main case
+		first_success, first_results = self.dynamic_programming(max_ally_indx - 1, remaining_traffic)
+		second_success, second_results = self.dynamic_programming(max_ally_indx - 1, remaining_traffic - self.supporting_allies[max_ally_indx]["scrubbing_capability"])
+
+		if second_success:
+			second_results["used_allies"].append(max_ally_indx)
+			second_results["unique_edges"].extend(self.supporting_allies[max_ally_indx]["as_path_edges"])
+			second_results["unique_edges"] = list(set(second_results["unique_edges"]))
+
+		if (not first_success and not second_success):
+			return False, None
+		elif (first_success and second_success):
+			return True, first_results if (len(first_results["unique_edges"]) < len(second_results["unique_edges"])) else second_results
+		else:
+			return True, first_results if first_success else second_results
+
+
+
+	def send_support(self, victim):
+
+		self.logger.info(f"[{self.env.now}] Sending Support.")
+
+		# add the address of the victim node to the set of addresses this AS is ready to accept packets for
+		self.advertised.append(victim)
+		self.helping_node.append(victim)
+
+		# send out the support message
+		pkt = {
+			"identifier": f"support_from_{self.asn}_{float(self.env.now):6.2}",
+			"pkt_type": "RAT",
+			"src": self.asn,
+			"dst": None,
+			"last_hop": self.asn,
+			"content": {"relay_type": "original_next_hop", "scrubbing_capability": self.scrubbing_cap, "protocol": "support", "ally": self.asn, "victim": victim, "as_path_to_victim": self.as_path_to_victim, "hc": 0}
+		}
+		self.send_packet(pkt, self.router_table.determine_highest_original())
+
 
 	def rat_reaction_help(self, pkt):
 		"""
@@ -618,27 +718,61 @@ class AllyAS(AutonomousSystem):
 
 		:type pkt: dict
 		"""
-		
+
 		# firstly denote the current amount of attack volume on the victim
 		self.router_table.update_attack_volume(pkt["content"]["attack_volume"])
-		self.logger.info(f"[{self.env.now}] Help registered. Sending Support.")
+		self.logger.info(f"[{self.env.now}] Help registered.")
+		self.attack_vol_on_victim = pkt["content"]["attack_volume"]
+		self.help_encountered = True
 
-		# add the address of the victim node to the set of addresses this AS is ready to accept packets for
-		self.advertised.append(self.as_path_to_victim[-1])
-		self.helping_node.append(pkt["src"])
+		self.supporting_allies.append({
+			"ally_asn": self.asn, 
+			"scrubbing_capability": self.scrubbing_cap, 
+			"as_path_edges": [(u, v) for u, v in zip(self.as_path_to_victim[:-1], self.as_path_to_victim[1:])]
+			})
+		
+		if self.decide_to_help():
+			self.send_support(pkt["src"])
+			# and send directly to all allies; note, that this is implemented as RAT pkg,
+			# but isnt really one
+			pkt = {
+				"identifier": f"ally_exchange_from_{self.asn}_{float(self.env.now):6.2}",
+				"pkt_type": "RAT",
+				"src": self.asn,
+				"dst": None,
+				"last_hop": self.asn,
+				"content": {"relay_type": "broadcast", "scrubbing_capability": self.scrubbing_cap, "protocol": "ally_exchange", "ally": self.asn, "victim": self.as_path_to_victim[-1], "as_path_to_victim": self.as_path_to_victim, "hc": 0}
+			}
+			self.send_packet(pkt, self.ebgp_AS_peers)
 
-		# send out the support message
-		pkt = {
-			"identifier": f"support_from_{self.asn}_{float(self.env.now):6.2}",
-			"pkt_type": "RAT",
-			"src": self.asn,
-			"dst": None,
-			"last_hop": self.asn,
-			"content": {"relay_type": "original_next_hop", "scrubbing_capability": self.scrubbing_cap, "protocol": "support", "ally": self.asn, "as_path_to_victim": self.as_path_to_victim, "hc": 0}
-		}
-		self.send_packet(pkt, self.router_table.determine_highest_original())
+	def rat_reaction_ally_exchange(self, pkt):
+		self.logger.info(f"[{self.env.now}] Ally Exchange registered.")
+		self.supporting_allies.append({
+			"ally_asn": pkt["src"], 
+			"scrubbing_capability": pkt["content"]["scrubbing_capability"], 
+			"as_path_edges": [(u, v) for u, v in zip(pkt["content"]["as_path_to_victim"][:-1], pkt["content"]["as_path_to_victim"][1:])]
+			})
+		if pkt["content"]["victim"] in self.helping_node: # if we are already helping
+			if self.decide_to_help(): # and want to keep helping
+				pass # nothing
+			else:
+				print("IMPLEMENT ME, I DONT WANT TO HELP ANYMORE")
+		elif self.help_encountered: # we did not want to help, but saw the message
+			if self.decide_to_help():
+				self.send_support(pkt["src"])
+				# and send directly to all allies; note, that this is implemented as RAT pkg,
+				# but isnt really one
+			pkt = {
+				"identifier": f"ally_exchange_from_{self.asn}_{float(self.env.now):6.2}",
+				"pkt_type": "RAT",
+				"src": self.asn,
+				"dst": None,
+				"last_hop": self.asn,
+				"content": {"relay_type": "broadcast", "scrubbing_capability": self.scrubbing_cap, "protocol": "ally_exchange", "ally": self.asn, "victim": self.as_path_to_victim[-1], "as_path_to_victim": self.as_path_to_victim, "hc": 0}
+			}
+			self.send_packet(pkt, self.ebgp_AS_peers)
 
-
-
+		else: 
+			print("SHOULDNT HAPPEN, HELP SHOULD ARRIVE BEFORE ALLY EXCHANGE")
 	def __str__(self):
 		return f"AS-{self.asn} (Ally) [{self.scrubbing_cap}]"

@@ -10,14 +10,18 @@ PRIORITY 1
 		* aux function
 		* include mthods in class description?
 		* file docstrings
-	* Routing Table 
-	* Oscillations
 	* statement retractment
 	* ally selection:
 		- if everything would be there -> by hasing or so ---> each ally (or node) has algorithm telling it, given the current ally supports, whether it shoul dhelp or not
 		- if not all are there, just run algorithm, and update it every time a support comes in
 		- if, after a support cal, it turn sout this ally should help but did support before --> support_retract protocol
 	* TODOs
+	* Find Bugs from Recordings:
+		* type 1: an ally is not there
+		* type 2: the sum of all the allies + vicitm does not add up
+		* type 3: help statements come sometimes weirdly
+		* type 4: osciallations still  occur with many allies between them
+
 
 PRIORITY 2
 	* still not 100 % reproducable -> attack over time is different!! starting attack vol too.
@@ -48,3 +52,10 @@ Traceback (most recent call last):
   File "/home/dcelik/Documents/masters_thesis/simulation/src/classes/network.py", line 236, in plot
     plt.scatter(*list(zip(*sink.received_attacks)), s= 1, c = "black")
 TypeError: scatter() missing 2 required positional arguments: 'x' and 'y
+
+
+
+need function to send directly to others except victim
+- new message type -> "other"
+	- doesnt get send
+- inform other allies, because support goes directly to victim through as path
