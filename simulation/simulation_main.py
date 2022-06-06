@@ -70,7 +70,7 @@ def main(nr_ASes = 200, nr_allies = 3, max_sim_length = 400, propagation_delay =
 	net.plot()
 
 	# also create a plot of the current topology
-	#net.generate_networkx_graph() # TODO uncomment
+	net.generate_networkx_graph() # TODO uncomment
 
 if __name__=="__main__":
 	main()

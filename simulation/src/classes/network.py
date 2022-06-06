@@ -275,10 +275,11 @@ class Internet(object):
 		# add the edges, node by node
 		for node_indx in range(self.nr_ASes):
 			graph.nodes[node_indx]["role"] = "standard"
-			for entry in self.ASes[node_indx].router_table.table:
-				if entry["split_percentage"] > 0:
-					graph.add_edge(node_indx, entry["next_hop"])
-					graph[node_indx][entry["next_hop"]]["split_percentage"] = entry["split_percentage"] 
+			next_hops_w_perc = self.ASes[node_indx].router_table.determine_next_hops(self.victim.asn)
+			for next_hop, percentage in next_hops_w_perc:
+					if percentage > 0:
+						graph.add_edge(node_indx, next_hop)
+						graph[node_indx][next_hop]["split_percentage"] = percentage
 
 		# denote the special nodes
 		graph.nodes[self.source.asn]["role"] = "source"

@@ -11,10 +11,6 @@ PRIORITY 1
 		* include mthods in class description?
 		* file docstrings
 	* statement retractment
-	* ally selection:
-		- if everything would be there -> by hasing or so ---> each ally (or node) has algorithm telling it, given the current ally supports, whether it shoul dhelp or not
-		- if not all are there, just run algorithm, and update it every time a support comes in
-		- if, after a support cal, it turn sout this ally should help but did support before --> support_retract protocol
 	* TODOs
 	* Find Bugs from Recordings:
 		* type 1: an ally is not there
