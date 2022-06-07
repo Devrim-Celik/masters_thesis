@@ -1,6 +1,7 @@
 import simpy
 import logging
 import random
+import numpy as np
 from pathlib import Path
 from datetime import datetime
 import networkx as nx
@@ -10,7 +11,10 @@ from src.graph_generation import generate_directed_AS_graph
 from src.aux import create_logger
 
 SEED = random.randint(0, 1000000000000)
+SEED = 1
+
 random.seed(SEED)
+np.random.seed(SEED)
 
 def setup_env(simulation_logger):
     # create and simpy environment instance
@@ -35,7 +39,7 @@ def run_simulation(
 
 
 
-def main(nr_ASes = 200, nr_allies = 3, max_sim_length = 400, propagation_delay = 3, attack_freq = 1): # TODO cant change freq? causes bug??
+def main(nr_ASes = 200, nr_allies = 4, max_sim_length = 400, propagation_delay = 3, attack_freq = 1): # TODO cant change freq? causes bug??
 	# current date and time, used to name this simulation
 	time_date_str = datetime.now().strftime("%d:%m:%Y_%H:%M:%S")
 

@@ -1,57 +1,31 @@
 todos:
 
-IN ORDER OF PRIORITY
-
-PRIORITY 1
-	* Comment!
-		* graph
-		* nodes [DONE]
-		* route table
-		* aux function
-		* include mthods in class description?
-		* file docstrings
-	* statement retractment
-	* TODOs
-	* Find Bugs from Recordings:
-		* type 1: an ally is not there 
-		* type 2: the sum of all the allies + vicitm does not add up --> I think fixed
-		* type 3: help statements come sometimes weirdly
-		* type 4: osciallations still  occur with many allies between them
-
-
-PRIORITY 2
-	* still not 100 % reproducable -> attack over time is different!! starting attack vol too.
-	* we can have negative probabilities if sum(ally_scrubbing) > attack vol ==> limit the value of "distribute_percentages_to_allies" to 1 somehow
-	* add scrubbing capabilities to victim -> if arrived_attack_vol / (1-sum(ally_traffic_handling_perc)))*100 < scrubbing capabilites --> CALL Of help?
-
-PRIORITY 3
-	* different attack modes
-	* router table for victim
-	* make it somehow, that victim and allies that are rdy to receive, dont have an active next hop (i.e., all percentage 0)
-	-> see generated graph for problem (and in general)
+NEW GENERATION TODOs
+1. Help and Help Retract should be more sophisticated
+2. Support Retractment
+3. Different Attack Modes
+4. Router Table for Victim (make it somehow, that victim and allies that are rdy to receive, dont have an active next hop (i.e., all percentage 0)
+	-> see generated graph for problem (and in general))
+5. Comments <-
+	* graph
+			* nodes [DONE]
+			* route table
+			* aux function
+			* include mthods in class description?
+			* file docstrings
+6. ToDos <_
+7. Not sure what i mean, but: we can have negative probabilities if sum(ally_scrubbing) > attack vol ==> limit the value of "distribute_percentages_to_allies" to 1 somehow DONE
+8. To Discuss 1
 
 
 
 
-NOTES: Retractment:
-* Issue 1: Sometimes Ally disappears and ally takes full load
+To DICUSS:
+1) The victim is currently responsible for updating the attack volume, and for calling off the attack. However, if we have a lot of allies on the attack path before the victim, it might not receive anymore attack packets, in which case it can not call off an attack, even if it doesnt take place anymore.
+	Solutions:
+	1) SourceAS is resonsible for calling off attack and giving attack updates
+	2) [Preferred]: If an AS notices, that it will, after deciding on the splits, be the first node on the attack path that will not send any more traffic to the victim, instead, it will send an "attack_update" to the victim , informing it out how much traffic is currently being absorbed by allies? or something like taht
 
-
-
-CASUAL ERRORS:
-
-Traceback (most recent call last):
-  File "simulation_main.py", line 76, in <module>
-    main()
-  File "simulation_main.py", line 70, in main
-    net.plot()
-  File "/home/dcelik/Documents/masters_thesis/simulation/src/classes/network.py", line 236, in plot
-    plt.scatter(*list(zip(*sink.received_attacks)), s= 1, c = "black")
-TypeError: scatter() missing 2 required positional arguments: 'x' and 'y
-
-
-
-need function to send directly to others except victim
-- new message type -> "other"
-	- doesnt get send
-- inform other allies, because support goes directly to victim through as path
+2) For support retracment, any ally assignment, it would be easiest to assume that alliest know all allies and their capabilities; but especially capabilities, sees unrealistic. THe problem is, that we might enter in repitition, because actions are made, before all allies are known; this way, one migh retract, receive an ally, then take back, and so on and so forth. 
+	Solutions:
+	1) Allies have a process running, that gets triggered once help is initiated. It will advertise its support, and the triggered process will will wait for X steps (2 * max possible transission length), on aafter which it will make the decision. This way, all allies should have all support advertisements, and make the decision with the same inputs.

@@ -82,14 +82,24 @@ class RoutingTable():
 				self.table.loc[self.table["priority"] == self.table["priority"].max(), "split_percentage"] = 1.0
 			# case 2: we have allies, and they are the only ones with the highest priority, in which case we split proportionally
 			elif self.table[self.table["priority"] == self.table["priority"].max()]["origin"].str.contains("ally").all():
-				#print("case2")
 				self.table["split_percentage"] = self.table.apply(lambda row: row["scrubbing_capabilities"]/self.table["scrubbing_capabilities"].sum(), axis = 1)
 			# case 3: we have allies and an original entry that both should be used; in this case, distribute to the allies
 			#			proportionally to the attack volume, and the rest goes to the victim
 			else:
-				#print("case3")
-				# first set the allies
-				self.table["split_percentage"] = self.table.apply(lambda row: row["scrubbing_capabilities"]/self.attack_vol_on_victim if row["priority"] == 3 else 0, axis = 1)
+				# variables used 
+				traffic_amount_already_split_away = self.table[(self.table["origin"].str.contains("ally").any()) & (self.table["priority"] != 3)]["scrubbing_capabilities"].sum()
+				traffic_amount_split_away_here = self.table[(self.table["origin"].str.contains("ally").any()) & (self.table["priority"] == 3)]["scrubbing_capabilities"].sum()
+
+				# calculate the amount of arriving traffic, by subracting ally scrubbing capabilities that receive before on the attack path
+				incoming_taffic_magnitude = self.attack_vol_on_victim - traffic_amount_already_split_away
+
+				# if the scrubbing capabilities of the allies at this node exceed this, we split the traffic between those allies proportionally, by setting 
+				# incoming_taffic_magnitude to the sum of all those allies scrubbing capabilities
+				if traffic_amount_split_away_here > incoming_taffic_magnitude:
+					incoming_taffic_magnitude = traffic_amount_split_away_here
+
+				# set the allies
+				self.table["split_percentage"] = self.table.apply(lambda row: row["scrubbing_capabilities"]/incoming_taffic_magnitude if row["priority"] == 3 else 0, axis = 1)
 				# then the highest original entry
 				self.table.loc[(self.table["origin"] == "original") & (self.table["priority"] == self.table["priority"].max()), "split_percentage"] = 1.0 - self.table["split_percentage"].sum()
 			self.logger.debug(f"[{self.env.now}] Routing Table:\n{self}")	

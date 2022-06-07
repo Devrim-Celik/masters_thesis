@@ -7,9 +7,9 @@
 # TODO maybe packet to dict
 # TODO pkt_type to type
 
-import random
 import copy
 import operator
+import random
 
 class AutonomousSystem(object):
 	"""
@@ -356,7 +356,11 @@ class SourceAS(AutonomousSystem):
 		super().__init__(*args)
 
 		# used to determine size and frequency of attack packets
-		self.attack_vol_limits = args[-1]["attack_vol_limits"]
+		self.full_attack_vol = args[-1]["full_attack_vol"]
+		self.standard_load = 50
+		self.attack_start = random.randint(0, 40)
+		self.attack_slowdown = 200
+		self.attack_stop = 300
 		self.attack_freq = args[-1]["attack_freq"]
 
 		# TODO
@@ -376,25 +380,22 @@ class SourceAS(AutonomousSystem):
 		"""
 
 
-		self.logger.info(f"[{self.env.now}] Starting attack on {self.as_path_to_victim[-1]} with limits {self.attack_vol_limits} and frequency {self.attack_freq}.")
+		self.logger.info(f"[{self.env.now}] Starting attack on {self.as_path_to_victim[-1]} with full strength {self.full_attack_vol} and frequency {self.attack_freq}.")
 
 		atk_indx = 0
 		while True:
 			yield self.env.timeout(self.attack_freq)
 
 			# TODO just to simualte something
-			if self.env.now <= 100:
-				addition_factor = 1000
-			elif 100 < self.env.now <= 130:
-				addition_factor = 1000 - (self.env.now - 100) * 26.6 
-			elif 130 < self.env.now <= 230:
-				addition_factor = 200
-			elif 230 < self.env.now <= 300:
-				addition_factor = 200 + (self.env.now - 230) * 7.1428
-			elif 300 < self.env.now:
-				addition_factor = 700
+			if self.env.now < self.attack_start:
+				attack_volume = random.randint(self.standard_load - 10, self.standard_load + 10)
+			elif self.attack_start <= self.env.now < self.attack_slowdown:
+				attack_volume = self.full_attack_vol - random.randint(0, int(self.full_attack_vol/15))
+			elif self.attack_slowdown <= self.env.now < self.attack_stop:
+				attack_volume = self.full_attack_vol - (self.env.now - self.attack_slowdown) * ((self.full_attack_vol - self.standard_load) / (self.attack_stop - self.attack_slowdown)) + random.randint(-10, 10)
+			else:
+				attack_volume = random.randint(self.standard_load - 10, self.standard_load + 10)
 
-			attack_volume = addition_factor  # addition_factor
 			self.attack_traffic_recording.append((self.env.now, attack_volume))
 			pkt = {
 				"identifier": f"Attack_Packet_{self.asn}_{atk_indx}",
@@ -443,7 +444,7 @@ class SourceAS(AutonomousSystem):
 
 
 	def __str__(self):
-		return f"AS-{self.asn} (Source) [{self.attack_vol_limits}]"
+		return f"AS-{self.asn} (Source) [{self.full_attack_vol}]"
 
 
 

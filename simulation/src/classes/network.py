@@ -113,7 +113,7 @@ class Internet(object):
 
 			# depending on the role, further attributes are supplied
 			if role == "source":
-				additional_attr["attack_vol_limits"] = graph.nodes[node_indx]["attack_vol_limits"]
+				additional_attr["full_attack_vol"] = graph.nodes[node_indx]["full_attack_vol"]
 				additional_attr["attack_freq"] = attack_freq
 			elif role == "victim":
 				additional_attr["scrubbing_capability"] = graph.nodes[node_indx]["scrubbing_cap"]
@@ -243,7 +243,7 @@ class Internet(object):
 
 		# plot all sinks (victim + allies)
 		for sink in self.allies + [self.victim]:
-			plt.scatter(*list(zip(*sink.received_attacks)), s= 1, c = "black")
+			#plt.scatter(*list(zip(*sink.received_attacks)), s= 1, c = "black")
 			plt.plot(*list(zip(*sink.received_attacks)), label = f"Received by {str(sink)}", lw= 0.3)
 
 		plt.hlines(y = self.plot_values["victim_scrubbing_capabilitiy"], xmin = 0, xmax = self.victim.received_attacks[-1][0], color = "black", label = "victim_scrubbing_capability")

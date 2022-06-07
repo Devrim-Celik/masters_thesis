@@ -139,7 +139,7 @@ def graph_pruning_via_BFS(
 
 
 
-def generate_directed_AS_graph(nr_ASes, nr_allies, figures_path, attack_vol_min = 450, attack_vol_max = 550, scrubbing_cap_min = 5):
+def generate_directed_AS_graph(nr_ASes, nr_allies, figures_path, attack_vol_min = 950, attack_vol_max = 1050, scrubbing_cap_min = 5):
     """
     Creates a directed, acyclic network topology representing the AS network. Edges
     represent flows as directed by BGP for some IP range.
@@ -192,19 +192,17 @@ def generate_directed_AS_graph(nr_ASes, nr_allies, figures_path, attack_vol_min 
     save_pyvis_network(G, f"{figures_path}/init_graph.html")
 
     # add attack volume limits to adversary
-    a = random.randint(attack_vol_min, attack_vol_max)
-    b = random.randint(attack_vol_min, attack_vol_max)
-    attack_vol_limits = tuple(sorted([a, b]))
-    G.nodes[adversary]["attack_vol_limits"] = attack_vol_limits
+    full_attack_vol = random.randint(attack_vol_min, attack_vol_max)
+    G.nodes[adversary]["full_attack_vol"] = full_attack_vol
 
     # add scrubbing capabilities to victim
-    G.nodes[victim]["scrubbing_cap"] = random.randint(200, attack_vol_max - 50) 
+    G.nodes[victim]["scrubbing_cap"] = random.randint(int(full_attack_vol/5), int(full_attack_vol/3)) 
 
     # add scrubbing capabilities to ally
-    remaining = attack_vol_min - scrubbing_cap_min * len(allies)
+    avg_scrub = (full_attack_vol - G.nodes[victim]["scrubbing_cap"]) / nr_allies
     for ally_indx in allies:
-        tmp = random.randint(70, max(int(remaining/2), 80))
-        G.nodes[ally_indx]["scrubbing_cap"] = tmp + scrubbing_cap_min
-        remaining -= tmp # todo uncomment
-
+        G.nodes[ally_indx]["scrubbing_cap"] = random.randint(100, int(avg_scrub)) * 1.5
+ 
     return G, victim, adversary, allies
+
+    attack_vol_limits
