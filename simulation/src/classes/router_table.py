@@ -77,8 +77,8 @@ class RoutingTable():
 			# start by resetting split percentages
 			self.table["split_percentage"] = 0
 
-			# case 1: we do not have any allies, in which case the original with the highest priority get 100 percent
-			if not self.table["origin"].str.contains("ally").any():
+			# case 1: we do not have any allies (that have a high priority), in which case the original with the highest priority get 100 percent
+			if not self.table[self.table["priority"] == self.table["priority"].max()]["origin"].str.contains("ally").any():
 				self.table.loc[self.table["priority"] == self.table["priority"].max(), "split_percentage"] = 1.0
 			# case 2: we have allies, and they are the only ones with the highest priority, in which case we split proportionally
 			elif self.table[self.table["priority"] == self.table["priority"].max()]["origin"].str.contains("ally").all():
@@ -96,7 +96,10 @@ class RoutingTable():
 
 	def determine_next_hops(self, dst):
 		# returns a list of next hops with splits
-		return list(self.table[["next_hop", "split_percentage"]].itertuples(index = False, name = None))
+		#return list(self.table[["next_hop", "split_percentage"]].itertuples(index = False, name = None))
+		# NOTE: in the case, that next_hops is [(21, 0.5), (21, 0.5)], it will split the attack packet into smaller ones, what we do not want
+		# instead, we will combine them into [(21, 0.5), (21, 0.5)] with the below:
+		return list(self.table[["next_hop", "split_percentage"]].groupby(["next_hop"]).sum().itertuples(index = True, name = None))
 
 	def determine_highest_original(self): 
 		if len(self.table):

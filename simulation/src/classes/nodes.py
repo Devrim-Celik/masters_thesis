@@ -384,17 +384,17 @@ class SourceAS(AutonomousSystem):
 
 			# TODO just to simualte something
 			if self.env.now <= 100:
-				addition_factor = 400
+				addition_factor = 1000
 			elif 100 < self.env.now <= 130:
-				addition_factor = (self.env.now - 100) * 13.3
+				addition_factor = 1000 - (self.env.now - 100) * 26.6 
 			elif 130 < self.env.now <= 230:
-				addition_factor = - random.randint(*self.attack_vol_limits) 
+				addition_factor = 200
 			elif 230 < self.env.now <= 300:
-				addition_factor = (self.env.now - 230) * 10
+				addition_factor = 200 + (self.env.now - 230) * 7.1428
 			elif 300 < self.env.now:
 				addition_factor = 700
 
-			attack_volume = random.randint(*self.attack_vol_limits) + addition_factor
+			attack_volume = 1000  # addition_factor
 			self.attack_traffic_recording.append((self.env.now, attack_volume))
 			pkt = {
 				"identifier": f"Attack_Packet_{self.asn}_{atk_indx}",
