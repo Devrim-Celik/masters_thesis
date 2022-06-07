@@ -394,7 +394,7 @@ class SourceAS(AutonomousSystem):
 			elif 300 < self.env.now:
 				addition_factor = 700
 
-			attack_volume = 1000  # addition_factor
+			attack_volume = addition_factor  # addition_factor
 			self.attack_traffic_recording.append((self.env.now, attack_volume))
 			pkt = {
 				"identifier": f"Attack_Packet_{self.asn}_{atk_indx}",

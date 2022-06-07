@@ -13,8 +13,8 @@ PRIORITY 1
 	* statement retractment
 	* TODOs
 	* Find Bugs from Recordings:
-		* type 1: an ally is not there
-		* type 2: the sum of all the allies + vicitm does not add up
+		* type 1: an ally is not there 
+		* type 2: the sum of all the allies + vicitm does not add up --> I think fixed
 		* type 3: help statements come sometimes weirdly
 		* type 4: osciallations still  occur with many allies between them
 

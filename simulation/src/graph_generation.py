@@ -203,7 +203,7 @@ def generate_directed_AS_graph(nr_ASes, nr_allies, figures_path, attack_vol_min 
     # add scrubbing capabilities to ally
     remaining = attack_vol_min - scrubbing_cap_min * len(allies)
     for ally_indx in allies:
-        tmp = min(random.randint(0, remaining), 100)
+        tmp = random.randint(70, max(int(remaining/2), 80))
         G.nodes[ally_indx]["scrubbing_cap"] = tmp + scrubbing_cap_min
         remaining -= tmp # todo uncomment
 

@@ -91,8 +91,13 @@ class RoutingTable():
 				# first set the allies
 				self.table["split_percentage"] = self.table.apply(lambda row: row["scrubbing_capabilities"]/self.attack_vol_on_victim if row["priority"] == 3 else 0, axis = 1)
 				# then the highest original entry
-				self.table.loc[(self.table["origin"] == "original") & (self.table["priority"] == self.table["priority"].max()), "split_percentage"] = 1.0 - self.table["scrubbing_capabilities"].sum()/self.attack_vol_on_victim
+				self.table.loc[(self.table["origin"] == "original") & (self.table["priority"] == self.table["priority"].max()), "split_percentage"] = 1.0 - self.table["split_percentage"].sum()
 			self.logger.debug(f"[{self.env.now}] Routing Table:\n{self}")	
+
+		# check to see that percentage == 1
+		if len(self.table) > 0 and round(self.table["split_percentage"].sum(), 1) != 1.0:
+			print(self.env.now, self.asn ,"DOESNT SUM UP TO 1")
+
 
 	def determine_next_hops(self, dst):
 		# returns a list of next hops with splits
