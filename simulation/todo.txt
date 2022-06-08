@@ -16,9 +16,11 @@ NEW GENERATION TODOs
 6. ToDos <_
 7. Not sure what i mean, but: we can have negative probabilities if sum(ally_scrubbing) > attack vol ==> limit the value of "distribute_percentages_to_allies" to 1 somehow DONE
 8. To Discuss 1
-
-
-
+9. Attack vol approximater
+	* maybe avg over last few
+	* also, help update not every message but only onder condition
+10. Run pep8 mod
+11. Markdown
 
 To DICUSS:
 1) The victim is currently responsible for updating the attack volume, and for calling off the attack. However, if we have a lot of allies on the attack path before the victim, it might not receive anymore attack packets, in which case it can not call off an attack, even if it doesnt take place anymore.
@@ -28,4 +30,23 @@ To DICUSS:
 
 2) For support retracment, any ally assignment, it would be easiest to assume that alliest know all allies and their capabilities; but especially capabilities, sees unrealistic. THe problem is, that we might enter in repitition, because actions are made, before all allies are known; this way, one migh retract, receive an ally, then take back, and so on and so forth. 
 	Solutions:
-	1) Allies have a process running, that gets triggered once help is initiated. It will advertise its support, and the triggered process will will wait for X steps (2 * max possible transission length), on aafter which it will make the decision. This way, all allies should have all support advertisements, and make the decision with the same inputs.
+	1) Allies have a process running, that gets triggered once help is initiated. It will advertise its support, and the triggered process will will wait for X steps (2 * max possible transission length), on aafter which it will make the decision. This way, all allies should have all support advertisements, and make the decision with the same inputs. PREFERRED
+	2) Have all allies know this ahead -> unrealistic
+	3) regarding 1), instead of timeout, it could also know the nr of allies, and wait till it got all advertisements OR a timeout expires
+
+	PROBLEM: since attack vol on victim might be different for all allies, results of algorithm will be different as well...
+
+
+3) In the Ally decision problem, we first want to collect lal allies, than make an "optimal" decision. However, what we could also do, is to simply stay that all help, and we see who even receives traffic! Some might be enough, so that other do not actually need to help, in which case they retract their help (or simply do nothing????).
+
+
+
+
+
+
+LONGTERM:
+1) No different ALly/victim/source classes, but only one class AS that can be all depneding on situation
+2) Multiple Sources, maybe many many (DISTRIBUTED denial of service)
+3) Maybe more sophisticated Routing Table, with real BGP possiblity
+4) Tunneling
+5) Sources should be source of attack volume updates, so to inform the router tables on the way and give them separate, accurate updates.

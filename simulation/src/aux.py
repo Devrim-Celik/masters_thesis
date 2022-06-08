@@ -1,3 +1,12 @@
+"""
+Contains various auxiliary function, among other things, function to load/save files
+and to create/display figures.
+
+Author:
+    Devrim Celik 08.06.2022
+"""
+
+
 import pickle
 from pyvis.network import Network
 import networkx as nx
@@ -151,8 +160,22 @@ def assign_attributes(
     return Graph
 
 
-def create_logger(name, log_file_location, level = logging.DEBUG, log_format_str = '%(name)s ==> %(levelname)s: %(message)s'):
-    formatter = logging.Formatter(log_format_str)
+def create_logger(name, log_file_location, level = logging.DEBUG):
+    """
+    Initializes a logger.
+
+    :param name: the name represnting this logger, appearing in the logs
+    :param log_file_location: where to save the log
+    :param level: logging level
+
+    :type name: str
+    :type log_file_location: str
+    :type level: str
+
+    :returns: the logger instances
+    :rtype: logging.RootLogger
+    """
+    formatter = logging.Formatter("%(name)s ==> %(levelname)s: %(message)s")
 
     handler = logging.FileHandler(log_file_location)        
     handler.setFormatter(formatter)

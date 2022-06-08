@@ -1,3 +1,9 @@
+"""
+Contains the Internet class..
+
+Author:
+	Devrim Celik 08.06.2022
+"""
 
 import random
 import string
@@ -7,7 +13,10 @@ import seaborn as sns
 import networkx as nx
 from pyvis.network import Network
 
-from .nodes import AutonomousSystem, SourceAS, VictimAS, AllyAS
+from .autonomous_system import AutonomousSystem
+from .sourceAS import SourceAS
+from .victimAS import VictimAS
+from .allyAS import AllyAS
 from .router_table import RoutingTable
 
 class Internet(object):
@@ -51,6 +60,8 @@ class Internet(object):
 		"ally": AllyAS
 	}
 
+
+
 	def __init__(self, env, graph, victim_indx, source_indx, ally_indc, attack_freq, prop_delay, 
 		network_logger, create_logger_func, log_subpath, figure_subpath ):
 
@@ -62,7 +73,6 @@ class Internet(object):
 		self.logger = network_logger
 		self.log_subpath = log_subpath
 		self.figure_subpath = figure_subpath
-
 		self.ASes = []
 		self.allies = []
 
@@ -142,19 +152,6 @@ class Internet(object):
 
 
 
-	@staticmethod
-	def generate_random_identifier(length=4):
-		"""
-		Generates a random string, used as an identifier.
-
-		:param length: number of characters in the random string
-
-		:type length: int
-		"""
-		return ''.join(random.choices(string.ascii_letters + string.digits, k = length))
-
-
-
 	def relay_std_packet(self, pkt, next_hops_w_perc):
 		"""
 		This function is responsible to relay packets of type standard ("STD") between autonomous systems.
@@ -174,18 +171,16 @@ class Internet(object):
 		yield self.env.timeout(self.propagation_delay + random.uniform(-0.01, 0.01)) # NOTE: random delay due to concurrency issues
 		self.logger.debug(f"[{self.env.now}] Sending attack message to {[t[0] for t in next_hops_w_perc]} with percentages {[t[1] for t in next_hops_w_perc]} from {pkt['last_hop']}.")
 
-		attack_vol = pkt["content"]["attack_volume"] # NOTE: this is implemented a bit more tidious, due to concurrency issues this bc concurrency issues
-													# TODO may be replaceable by introducing small delay in for loop. do same for method below
+		
 		# split the attack traffic, according to proportions of the given routing table
 		for next_hop, percentage in next_hops_w_perc:
 			if percentage > 0:
-				tmp_pkt = copy.deepcopy(pkt)
+				tmp_pkt = copy.deepcopy(pkt) # NOTE needed because of concurrence issues
 				modified_content = {k:v for k, v in pkt["content"].items()}
-				modified_content["attack_volume"] = attack_vol * percentage
+				modified_content["attack_volume"] = pkt["content"]["attack_volume"] * percentage
 				tmp_pkt["content"] = modified_content
 				tmp_pkt["next_hop"] = next_hop
 				self.ASes[next_hop].process_pkt(tmp_pkt)
-
 
 
 
@@ -214,6 +209,7 @@ class Internet(object):
 			self.ASes[next_hop].process_pkt(tmp_pkt)
 
 
+
 	def plot(self):
 		"""
 		This method will aggregated the collected data points to create figures about the recorded attack
@@ -221,15 +217,6 @@ class Internet(object):
 
 		Generated figures as saved in the supplied path for figures during initialization of the Internet
 		instance.
-
-		# TODOs:
-			* mark important events with vertical lines, like
-				* help call out
-				* attack path call out [maybe]
-				* support call from each ally [maybe]
-				* retreat call
-			* horizontal lines:
-				* ally capability
 		"""
 		
 		plt.figure("DDoS Traffic Recordings", figsize=(16, 10))
@@ -238,33 +225,35 @@ class Internet(object):
 		plt.ylim(0, 2000)
 
 		# plot attack traffic
-		plt.scatter(*list(zip(*self.source.attack_traffic_recording)), s= 2, c = "black")
-		plt.plot(*list(zip(*self.source.attack_traffic_recording)), label = f"Sent by {str(self.source)}", c = "black", lw= 0.5)
+		#plt.scatter(*list(zip(*self.source.attack_traffic_recording)), s= 2, c = "black")
+		plt.plot(*list(zip(*self.source.attack_traffic_recording)), label = f"Sent by {str(self.source)}", c = "black", lw= 1.5, ls= "dotted")
 
 		# plot all sinks (victim + allies)
 		for sink in self.allies + [self.victim]:
-			#plt.scatter(*list(zip(*sink.received_attacks)), s= 1, c = "black")
-			plt.plot(*list(zip(*sink.received_attacks)), label = f"Received by {str(sink)}", lw= 0.3)
+			plt.scatter(*list(zip(*sink.received_attacks)), s= 1, label = f"Received by {str(sink)}", marker = "X")
+			#plt.plot(*list(zip(*sink.received_attacks)), label = f"Received by {str(sink)}", lw= 1)
 
 		plt.hlines(y = self.plot_values["victim_scrubbing_capabilitiy"], xmin = 0, xmax = self.victim.received_attacks[-1][0], color = "black", label = "victim_scrubbing_capability")
 
 		# TODO arrows invisible
 		for tp, val in self.plot_values["victim_help_calls"]:
-			plt.annotate("HELP", (tp, val), xytext = (tp, max(val, self.plot_values["victim_scrubbing_capabilitiy"]) + 250))
+			plt.annotate(f"[AS{self.victim.asn}]\nHelp Signal Issued", (tp, val + 15), xytext = (tp, max(val, self.plot_values["victim_scrubbing_capabilitiy"]) + 450), horizontalalignment = "center", arrowprops = dict(arrowstyle='-|>', lw=2))
 		for tp, val in self.plot_values["victim_help_retractment_calls"]:
-			plt.annotate("RETRACT\nHELP", (tp, val), xytext = (tp, max(val, self.plot_values["victim_scrubbing_capabilitiy"]) + 100))
+			plt.annotate(f"[AS{self.victim.asn}]\nHelp Signal Retracted", (tp, val + 15), xytext = (tp, max(val, self.plot_values["victim_scrubbing_capabilitiy"]) + 300), horizontalalignment = "center", arrowprops = dict(arrowstyle='-|>', lw=2))
 
 		plt.legend(loc = "upper right")
 		plt.tight_layout()
 		plt.savefig(f"{self.figure_subpath}/recorded_attack_traffic.png", dpi = 400)
 		plt.savefig(f"{self.figure_subpath}/recorded_attack_traffic.svg", dpi = 400)
-		plt.show()
+		#plt.show()
 
-	def generate_networkx_graph(self, changed_edge_color = "purple", removed_edge_color = "red"):
 
-		# NOTE: if we do a retreat statement, then it will return back to normal
-		# MORE INTERESTING: during help call active
 
+	def generate_networkx_graph(self, changed_edge_color = "purple"):
+		"""
+		This method will use the initial networkx graph, and the ASes that run through a simulation, to generate
+		the changed network topology as a networkx and save it as a PyVis html figure in the supplied figure path.
+		"""
 
 		# initialize a directed graph
 		graph = nx.DiGraph()
@@ -275,11 +264,14 @@ class Internet(object):
 		# add the edges, node by node
 		for node_indx in range(self.nr_ASes):
 			graph.nodes[node_indx]["role"] = "standard"
+			graph.nodes[node_indx]["color"] = "lightgrey"
 			next_hops_w_perc = self.ASes[node_indx].router_table.determine_next_hops(self.victim.asn)
 			for next_hop, percentage in next_hops_w_perc:
 					if percentage > 0:
 						graph.add_edge(node_indx, next_hop)
 						graph[node_indx][next_hop]["split_percentage"] = percentage
+						graph[node_indx][next_hop]["title"] = percentage
+
 
 		# denote the special nodes
 		graph.nodes[self.source.asn]["role"] = "source"
@@ -288,7 +280,7 @@ class Internet(object):
 		graph.nodes[self.victim.asn]["color"] = "green"
 		for ally_AS in self.allies:	
 			graph.nodes[ally_AS.asn]["role"] = "ally"
-			graph.nodes[ally_AS.asn]["role"] = "blue"
+			graph.nodes[ally_AS.asn]["color"] = "blue"
 
 
 		# denote changed and removed edges:
@@ -303,6 +295,20 @@ class Internet(object):
 			else:
 				pass
 
+		# TODO this is just hacky for now, to avoid the bidirectional arrows
+		# induced by the router tables of allies and victim
+		tmp = []
+		for u, v in graph.edges:
+			if (v, u) in list(graph.edges) and not (v, u) in tmp:
+				tmp.append((u, v))
+		for u, v in tmp:
+			if graph.nodes[u]["role"] != "standard":
+				graph.remove_edge(u, v)
+				graph[v][u]["color"] = changed_edge_color
+			else:
+				graph.remove_edge(v, u)
+				graph[u][v]["color"] = changed_edge_color
+
 		# save figure
 		net = Network(
 			notebook = True, 
@@ -313,3 +319,16 @@ class Internet(object):
 		net.inherit_edge_colors(False)
 		net.from_nx(graph)
 		net.save_graph(f"{self.figure_subpath}/generated_graph.html")
+
+
+
+	@staticmethod
+	def generate_random_identifier(length=4):
+		"""
+		Generates a random string, used as an identifier.
+
+		:param length: number of characters in the random string
+
+		:type length: int
+		"""
+		return ''.join(random.choices(string.ascii_letters + string.digits, k = length))

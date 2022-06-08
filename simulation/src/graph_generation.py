@@ -1,3 +1,9 @@
+"""
+Contains functions to generate graphs which will be used for simulations.
+
+Author:
+    Devrim Celik 08.06.2022
+"""
 
 import networkx as nx
 import random
@@ -143,7 +149,10 @@ def generate_directed_AS_graph(nr_ASes, nr_allies, figures_path, attack_vol_min 
     """
     Creates a directed, acyclic network topology representing the AS network. Edges
     represent flows as directed by BGP for some IP range.
-    Furthermore assigns a victim node, an adversary node and ally nodes.
+    Furthermore assigns a victim node, an adversary node and ally nodes. 
+
+    Also, this function will assign the attack volume of the source and the 
+    scrubbing capabilities of the victim and the allies.
 
     :param nr_ASes: number of AS to be in the graph
     :param nr_allies: number of allies willing to help scrubbing DDoS traffic      
@@ -201,8 +210,7 @@ def generate_directed_AS_graph(nr_ASes, nr_allies, figures_path, attack_vol_min 
     # add scrubbing capabilities to ally
     avg_scrub = (full_attack_vol - G.nodes[victim]["scrubbing_cap"]) / nr_allies
     for ally_indx in allies:
-        G.nodes[ally_indx]["scrubbing_cap"] = random.randint(100, int(avg_scrub)) * 1.5
+        #G.nodes[ally_indx]["scrubbing_cap"] = random.randint(100, int(avg_scrub)) * 1.5
+        G.nodes[ally_indx]["scrubbing_cap"] = random.randint(50, 100)
  
     return G, victim, adversary, allies
-
-    attack_vol_limits
