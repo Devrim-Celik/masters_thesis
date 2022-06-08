@@ -4,15 +4,13 @@ Contains functions to generate graphs which will be used for simulations.
 Author:
     Devrim Celik 08.06.2022
 """
-
 import networkx as nx
 import random
 
+from .auxiliary_functions import assign_attributes
 
-from .aux import save_pyvis_network, assign_attributes
 
-
-def to_directed_via_BFS(input_Graph, victim):
+def to_directed_via_bfs(input_graph, victim):
     """
     Used to make an undirected Graph with a victim node into a directed graph, such that
     the resulting graph is a sensible assignment for a directed, acyclic graph with a sink,
@@ -28,12 +26,12 @@ def to_directed_via_BFS(input_Graph, victim):
     :return: directed graph
     :rytpe: nx.classes.graph.Graph
     """
-    Graph = input_Graph.copy()
+    graph = input_graph.copy()
 
     # representing the queue through a list and the pop(0) and append() methods
     Q = [victim]
     # for indicating, whether nodes were already explored a not
-    explored = [False]*len(Graph.nodes)
+    explored = [False]*len(graph.nodes)
     # for remembering which edges to remove and add
     edges_to_remove = []
     edges_to_add = []
@@ -43,7 +41,7 @@ def to_directed_via_BFS(input_Graph, victim):
         current = Q.pop(0)
         
         # consider all neighbors of the current node
-        for neighbor in Graph.neighbors(current):
+        for neighbor in graph.neighbors(current):
             
             if not explored[neighbor]:
                 Q.append(neighbor)
@@ -53,17 +51,17 @@ def to_directed_via_BFS(input_Graph, victim):
         explored[current] = True        
     
     # make G into a directed graph
-    Graph = Graph.to_directed()
+    graph = graph.to_directed()
 
     # remove and add the edges, after checking if this action is legal
-    for u,v in edges_to_remove:
-        if (u, v) in Graph.edges:
-            Graph.remove_edge(u, v)
-    for u,v, in edges_to_add:
-        if not (u, v) in Graph.edges:
-            Graph.add_edge(u, v)
+    for u, v in edges_to_remove:
+        if (u, v) in graph.edges:
+            graph.remove_edge(u, v)
+    for u, v, in edges_to_add:
+        if not (u, v) in graph.edges:
+            graph.add_edge(u, v)
         
-    return Graph
+    return graph
 
 
 
@@ -145,7 +143,7 @@ def graph_pruning_via_BFS(
 
 
 
-def generate_directed_AS_graph(nr_ASes, nr_allies, figures_path, attack_vol_min = 950, attack_vol_max = 1050, scrubbing_cap_min = 5):
+def generate_directed_AS_graph(nr_ASes, nr_allies, full_attack_vol):
     """
     Creates a directed, acyclic network topology representing the AS network. Edges
     represent flows as directed by BGP for some IP range.
@@ -156,14 +154,12 @@ def generate_directed_AS_graph(nr_ASes, nr_allies, figures_path, attack_vol_min 
 
     :param nr_ASes: number of AS to be in the graph
     :param nr_allies: number of allies willing to help scrubbing DDoS traffic      
-    :param :
-    :param :
-    :param :
-    :param :
-    :param :
+    :param full_attack_vol: the attack volume of the DDoS attack in Mbps
+
 
     :type nr_ASes: int
     :type nr_allies: int
+    :type full_attack_vol: float
 
     :return: a tuple containing
         * the generated graph
@@ -189,7 +185,7 @@ def generate_directed_AS_graph(nr_ASes, nr_allies, figures_path, attack_vol_min 
     G = assign_attributes(G, victim, adversary, allies)
     
     # change it to a directed, acyclic graph, with the victim as a sink
-    G = to_directed_via_BFS(G, victim)
+    G = to_directed_via_bfs(G, victim)
     
     # prune
     G = graph_pruning_via_BFS(G, victim, 1)
@@ -197,11 +193,7 @@ def generate_directed_AS_graph(nr_ASes, nr_allies, figures_path, attack_vol_min 
     # add distances to all sinks
     G = add_AS_PATH_to_victim(G, victim)
 
-    # save figure
-    save_pyvis_network(G, f"{figures_path}/init_graph.html")
-
     # add attack volume limits to adversary
-    full_attack_vol = random.randint(attack_vol_min, attack_vol_max)
     G.nodes[adversary]["full_attack_vol"] = full_attack_vol
 
     # add scrubbing capabilities to victim

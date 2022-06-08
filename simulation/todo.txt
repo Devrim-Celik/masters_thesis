@@ -14,13 +14,12 @@ NEW GENERATION TODOs
 			* include mthods in class description?
 			* file docstrings
 6. ToDos <_
-7. Not sure what i mean, but: we can have negative probabilities if sum(ally_scrubbing) > attack vol ==> limit the value of "distribute_percentages_to_allies" to 1 somehow DONE
-8. To Discuss 1
 9. Attack vol approximater
 	* maybe avg over last few
 	* also, help update not every message but only onder condition
 10. Run pep8 mod
 11. Markdown
+12. Command line arguments inclusions for simulation main
 
 To DICUSS:
 1) The victim is currently responsible for updating the attack volume, and for calling off the attack. However, if we have a lot of allies on the attack path before the victim, it might not receive anymore attack packets, in which case it can not call off an attack, even if it doesnt take place anymore.

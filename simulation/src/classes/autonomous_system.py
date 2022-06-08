@@ -5,23 +5,31 @@ Author:
 	Devrim Celik 08.06.2022
 """
 
+
 import copy
+
 
 class AutonomousSystem(object):
 	"""
-	This class is the representing a standard autonomous system in our simulations.
+	This class is the representing a standard autonomous system in our
+	simulations.
 
 	:param env: the simpy environment this AS will be running in
 	:param network: the network this AS is integrated in
-	:param asn: a value representing its autonomous systen number, basically an identifer
-	:param router_table: an object, which will be used to simulate a routing table
-	:param ebgp_AS_peers: a list of all the ASes it is connected through EBGP sessions
-	:param seen_rats: a list of all seen route advertisements, in order to recognize novel ones
-	:param advertised: the list of ASNs (in real life it would IP blocks) this AS is advertising routes for
-						and ready to receive packets for
+	:param asn: a value representing its autonomous systen number, basically
+		an identifer
+	:param router_table: an object, which will be used to simulate
+		a routing table
+	:param ebgp_AS_peers: a list of all the ASes it is connected
+		through EBGP sessions
+	:param seen_rats: a list of all seen route advertisements, in order to
+		recognize novel ones
+	:param advertised: the list of ASNs (in real life it would IP blocks) this
+		 AS is advertising routes for and ready to receive packets for
 	:param received_attacks: to collected data on received attacks
 	:param on_attack_path: to denote, whether this AS lies on an attack path
-	:param attack_path_predecessor: if it is on attack path, this value will denote the ASN of the predecessor
+	:param attack_path_predecessor: if it is on attack path, this value will
+		denote the ASN of the predecessor
 	:param helping_node: collects all nodes that this list is helping
 
 	:type env: simpy.Environment
@@ -38,8 +46,8 @@ class AutonomousSystem(object):
 	"""
 
 
-
-	def __init__(self, env, network, logger, asn, router_table, ebgp_AS_peers, additional_attr):
+	def __init__(self, env, network, logger, asn, router_table, ebgp_AS_peers,
+				 additional_attr):
 		# set attributes
 		self.env = env
 		self.network = network
@@ -58,19 +66,21 @@ class AutonomousSystem(object):
 		self.tab = "\t"
 		
 
-
 	def send_packet(self, pkt, next_hops):
 		"""
-		This method is reponsible for sending a packet. It calls corresponding functions, depending
-		on the type of the received packet. Either a normal packet with attack load ("STD") or a route 
+		This method is reponsible for sending a packet. It calls corresponding
+		functions, depending on the type of the received packet. Either a
+		normal packet with attack load ("STD") or a route
 		advertisement ("RAT").
 
 		:param pkt: the, to be sent, packet
-		:param next_hops: a list of destinations this packet is going to be transmitted to (RAT)/
-							a list of destination with probabilites this packet is going to be distributed to (STD)
+		:param next_hops: a list of destinations this packet is going to be
+			transmitted to (RAT)/a list of destination with probabilites this
+			 packet is going to be distributed to (STD)
 
 		:type pkt: dict
-		:type next_hops: list[int] for RAT packets / list[tuple[int, float]] for standard packets
+		:type next_hops: list[int] for RAT packets
+			/ list[tuple[int, float]] for standard packets
 		"""
 		if next_hops == []:
 			return
@@ -94,26 +104,27 @@ class AutonomousSystem(object):
 				raise Exception("Trying to send to an AS, that is not a peer!")
 		elif pkt["type"] == "RAT":
 			# check that all targets are connected to this AS
-			
 			if set(next_hops).issubset(set(self.ebgp_AS_peers)):
 				self.env.process(self.network.relay_rat(pkt, next_hops))
 			else:
 				raise Exception("Trying to send to an AS, that is not a peer!")
 
 
-
 	def process_pkt(self, pkt): 
 		"""
-		This method is responsible for handling incoming packets. Generally, we can 
-		differentiate between the following types of packets:
-			* STD: a standard packet, carrying some load 
-			* RAT: a route advertisement, which can contain one of the following protocol calls
+		This method is responsible for handling incoming packets. Generally, we
+		can differentiate between the following types of packets:
+			* STD: a standard packet, carrying some load
+			* RAT: a route advertisement, which can contain one of the following
+				   protocol calls
 				* help: issued from an attacked victim
 				* support: issued from an ally of the attacked victim
-				* as_path: issued from the AS where the attack traffic originates from
-		Since the reaction to different protocol calls is quite different between different types
-		of autonomous systems, this method calls specific "reaction" methods, depending on the
-		type of RAT.
+				* as_path: issued from the AS where the attack traffic
+					originates from
+
+		Since the reaction to different protocol calls is quite different
+		between different types of autonomous systems, this method calls
+		specific "reaction" methods, depending on the type of RAT.
 
 		:param pkt: the incoming packets
 
@@ -135,7 +146,7 @@ class AutonomousSystem(object):
 		# for RAT packets
 		elif pkt["type"] == "RAT":
 
-			########## distributed as specified by the protocol
+			# distributed as specified by the protocol
 			pkt_tmp = copy.deepcopy(pkt)
 			pkt_tmp["last_hop"] = self.asn
 
@@ -148,7 +159,7 @@ class AutonomousSystem(object):
 			elif pkt["content"]["relay_type"] == "no_relay":
 				pass
 
-			############## react to it, if this packet has not already been seen
+			# react to it, if this packet has not already been seen
 			if not pkt["identifier"] in self.seen_rats:
 				self.seen_rats.append(pkt["identifier"])
 				# call the corresponding reaction
@@ -166,11 +177,11 @@ class AutonomousSystem(object):
 					self.rat_reaction_ally_exchange(pkt)
 
 
-
 	def rat_reaction_ally_exchange(self, pkt):
 		"""
-		This method implements the reaction of a standard autonomous system to to an ally exchange packet.
-		Explicitly, we do not want to react, i.e., this function does nothing.
+		This method implements the reaction of a standard autonomous system
+		to to an ally exchange packet. Explicitly, we do not want to react,
+		i.e., this function does nothing.
 
 		:param pkt: the incoming packets
 
@@ -179,26 +190,29 @@ class AutonomousSystem(object):
 		pass
 
 
-
 	def process_std_pkt(self, pkt):
 		"""
-		This method is responsible for processing an incoming, standard packet. The basic idea is,
-		that if we are the destination of the packet, we will receive it, and otherwise it will
-		be relayed to the next hop.
+		This method is responsible for processing an incoming, standard
+		packet. The basic idea is, that if we are the destination of the
+		packet, we will receive it, and otherwise it will be relayed to the
+		next hop.
 
 		:param pkt: the incoming packets
 
 		:type pkt: dict
 		"""
 
-		# if the destination of this packet is an address this AS advertise, this node is getting attacked
+		# if the destination of this packet is an address this AS advertise,
+		# this node is getting attacked
 		if pkt["dst"] in self.advertised:
 			self.attack_reaction(pkt)
 		# else, relay it
 		else:
 			pkt["last_hop"] = self.asn
-			self.send_packet(pkt, self.router_table.determine_next_hops(pkt["dst"]))
-
+			self.send_packet(
+				pkt, 
+				self.router_table.determine_next_hops(pkt["dst"])
+			)
 
 
 	def attack_reaction(self, pkt):
@@ -210,15 +224,16 @@ class AutonomousSystem(object):
 		:type pkt: dict
 		"""
 		self.logger.info(f"[{self.env.now}] Attack Packet with ID {pkt['identifier']} arrived with magnitutde {pkt['content']['attack_volume']} Gbps.")
-		self.received_attacks.append((self.env.now, pkt["content"]["attack_volume"]))
-
-
+		self.received_attacks.append(
+			(self.env.now, pkt["content"]["attack_volume"])
+		)
 
 
 	def rat_reaction_help_update(self, pkt):
 		"""
-		This method implements the response to receiving a RAT packet, with the help update protocol. The router table will
-		receive an update regarding the current estimate of the attack volume.
+		This method implements the response to receiving a RAT packet, with
+		the help update protocol. The router table will receive an update
+		regarding the current estimate of the attack volume.
 
 		:param pkt: the incoming packets
 
@@ -228,11 +243,11 @@ class AutonomousSystem(object):
 		self.router_table.update_attack_volume(pkt["content"]["attack_volume"])
 
 
-
 	def rat_reaction_help_retractment(self, pkt):
-		""" 
-		This method implements the response to receiving a RAT packet, with the help retractment protocol. Variables
-		will be reset and routing table will be resetted to the original status.
+		"""
+		This method implements the response to receiving a RAT packet, with
+		the help retractment protocol. Variables will be reset and routing
+		table will be resetted to the original status.
 
 		:param pkt: the incoming packets
 
@@ -257,13 +272,12 @@ class AutonomousSystem(object):
 			self.ally_help = {}
 		if hasattr(self, "supporting_allies"):
 			self.supporting_allies = []
-			
 
 
 	def rat_reaction_help(self, pkt):
 		"""
-		This method implements the response to receiving a RAT packet, with the help protocol. A default AS will simply
-		broadcast it to its peers.
+		This method implements the response to receiving a RAT packet, with
+		the help protocol. A default AS will simply broadcast it to its peers.
 
 		:param pkt: the incoming packets
 
@@ -274,13 +288,13 @@ class AutonomousSystem(object):
 		self.router_table.update_attack_volume(pkt["content"]["attack_volume"])
 
 
-
-	def rat_reaction_support(self, pkt): 
+	def rat_reaction_support(self, pkt):
 		"""
-		This method implements the response to receiving a RAT packet, with the support protocol. This node
-		might update its routing table, if 
+		This method implements the response to receiving a RAT packet, with
+		the support protocol. This node might update its routing table, if
 			a) it does not believe itself to be on the attack path, or
-			b) if it is on the attack path, the last hop of the package does not come along the attack path.
+			b) if it is on the attack path, the last hop of the package does
+				not come along the attack path.
 
 		:param pkt: the incoming packets
 
@@ -291,10 +305,10 @@ class AutonomousSystem(object):
 
 			# add the advertised route the routing table
 			entry = {
-				"identifier": "TODO", 
-				"next_hop": pkt["content"]["as_path_to_victim"][pkt["content"]["hc"]-1],
-				"destination": pkt["content"]["as_path_to_victim"][-1], # the router thiinks, the destination is the vicitm, although ally
-				"priority": 3 if (pkt["last_hop"] != self.attack_path_predecessor) else 1, # depending on whether this node handles this split or not, set the priority
+				"identifier": f"support_RAT_reaction_{int(self.env.now)}",
+				"next_hop": pkt["content"]["as_path_to_victim"][pkt["content"]["hc"] - 1],
+				"destination": pkt["content"]["as_path_to_victim"][-1],
+				"priority": 3 if (pkt["last_hop"] != self.attack_path_predecessor) else 1,
 				"split_percentage": 0,
 				"scrubbing_capabilities": pkt["content"]["scrubbing_capability"],
 				"as_path": pkt["content"]["as_path_to_victim"][pkt["content"]["hc"]:],
@@ -305,13 +319,14 @@ class AutonomousSystem(object):
 			self.router_table.add_entry(entry)
 
 
-
 	def rat_reaction_attack_path(self, pkt):
 		"""
-		This method implements the response to receiving a RAT packet, with the attack_path protocol. the response is
-		to increase the priority of the original next hop, so that it is on an even level with used ally entries. At the same
-		time, decrease all ally priorities that come from the attack path, since an AS further up the attack path is responsible
-		for splitting towards it.
+		This method implements the response to receiving a RAT packet, with
+		the attack_path protocol. the response is to increase the priority
+		of the original next hop, so that it is on an even level with used
+		ally entries. At the same time, decrease all ally priorities that come
+		from the attack path, since an AS further up the attack path is
+		responsible for splitting towards it.
 
 		:param pkt: the incoming packets
 
@@ -327,7 +342,6 @@ class AutonomousSystem(object):
 		self.router_table.increase_original_priority()
 		# decrease the priority of all ally paths that come from the attack path
 		self.router_table.reduce_allies_based_on_asn(pkt["last_hop"])
-
 
 
 	def __str__(self):
