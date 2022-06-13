@@ -89,7 +89,6 @@ class RoutingTable():
 		the victim, with adequate split percentages when multipathing is
 		necessary.
 		"""
-
 		if len(self.table):
 			# start by resetting split percentages
 			self.table["split_percentage"] = 0
@@ -138,7 +137,7 @@ class RoutingTable():
 
 		# check to see that percentage is 1.0
 		if len(self.table) > 0 and round(self.table["split_percentage"].sum(), 1) != 1.0:
-			yield Exception(f"[{self.asn}] Router Entry Percentages do not add up to 1.0")
+			print(f"[{self.asn}] Router Entry Percentages do not add up to 1.0") # using "yield error" makes thi method not execute at all anymore, without errorrß????????
 
 
 	def determine_next_hops(self, dst):

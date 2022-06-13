@@ -195,6 +195,11 @@ class Internet(object):
 				tmp_pkt["next_hop"] = next_hop
 				self.ASes[next_hop].process_pkt(tmp_pkt)
 
+	def get_atk_path_predecessors(self, node):
+		if node in self.source.as_path_to_victim:
+			return [self.source.as_path_to_victim[self.source.as_path_to_victim.index(node) - 1	]]
+		else:
+			return []
 
 	def relay_rat(self, pkt, next_hops):
 		"""

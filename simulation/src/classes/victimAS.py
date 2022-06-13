@@ -194,7 +194,9 @@ class VictimAS(AutonomousSystem):
 				}
 				self.nr_help_updates += 1
 
-		self.send_packet(help_pkt, self.ebgp_AS_peers)
+
+		if help_pkt["identifier"] != None:
+			self.send_packet(help_pkt, self.ebgp_AS_peers)
 
 
 	def rat_reaction_support(self, pkt):

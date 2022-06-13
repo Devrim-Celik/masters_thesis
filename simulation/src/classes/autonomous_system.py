@@ -59,7 +59,7 @@ class AutonomousSystem(object):
 		self.advertised = [self.asn]
 		self.received_attacks = []
 		self.on_attack_path = False
-		self.attack_path_predecessor = None
+		self.attack_path_predecessors = []
 		self.helping_node = []
 		# for printing
 		self.new_line = "\n"
@@ -171,23 +171,6 @@ class AutonomousSystem(object):
 					self.rat_reaction_help_retractment(pkt)
 				elif pkt["content"]["protocol"] == "support":
 					self.rat_reaction_support(pkt)
-				elif pkt["content"]["protocol"] == "attack_path":
-					self.rat_reaction_attack_path(pkt)
-				elif pkt["content"]["protocol"] == "ally_exchange":
-					self.rat_reaction_ally_exchange(pkt)
-
-
-	def rat_reaction_ally_exchange(self, pkt):
-		"""
-		This method implements the reaction of a standard autonomous system
-		to to an ally exchange packet. Explicitly, we do not want to react,
-		i.e., this function does nothing.
-
-		:param pkt: the incoming packets
-
-		:type pkt: dict
-		"""
-		pass
 
 
 	def process_std_pkt(self, pkt):
@@ -261,7 +244,7 @@ class AutonomousSystem(object):
 		if hasattr(self, "on_attack_path"):
 			self.on_attack_path = False
 		if hasattr(self, "attack_path_predecessor"):
-			self.attack_path_predecessor = None
+			self.attack_path_predecessors = None
 		if hasattr(self, "atk_path_signal"):
 			self.atk_path_signal = False
 		if hasattr(self, "nr_help_updates"):
@@ -288,6 +271,22 @@ class AutonomousSystem(object):
 		self.router_table.update_attack_volume(pkt["content"]["attack_volume"])
 
 
+
+		attack_path_predecessors = self.network.get_atk_path_predecessors(self.asn)
+		self.on_attack_path = bool(attack_path_predecessors)
+		self.attack_path_predecessors = attack_path_predecessors
+
+		if self.on_attack_path:
+			# increase the priority of the original next hop entry
+			self.router_table.increase_original_priority()
+			# decrease the priority of all ally paths that come from the attack path
+			for asn in self.attack_path_predecessors:
+				self.router_table.reduce_allies_based_on_asn(asn)
+
+		else:
+			pass # happens when we are not on attack path anymore
+
+
 	def rat_reaction_support(self, pkt):
 		"""
 		This method implements the response to receiving a RAT packet, with
@@ -308,7 +307,7 @@ class AutonomousSystem(object):
 				"identifier": f"support_RAT_reaction_{int(self.env.now)}",
 				"next_hop": pkt["content"]["as_path_to_victim"][pkt["content"]["hc"] - 1],
 				"destination": pkt["content"]["as_path_to_victim"][-1],
-				"priority": 3 if (pkt["last_hop"] != self.attack_path_predecessor) else 1,
+				"priority": 3 if (not pkt["last_hop"] in self.attack_path_predecessors) else 1,
 				"split_percentage": 0,
 				"scrubbing_capabilities": pkt["content"]["scrubbing_capability"],
 				"as_path": pkt["content"]["as_path_to_victim"][pkt["content"]["hc"]:],
@@ -317,31 +316,6 @@ class AutonomousSystem(object):
 				"time_added": self.env.now
 			}
 			self.router_table.add_entry(entry)
-
-
-	def rat_reaction_attack_path(self, pkt):
-		"""
-		This method implements the response to receiving a RAT packet, with
-		the attack_path protocol. the response is to increase the priority
-		of the original next hop, so that it is on an even level with used
-		ally entries. At the same time, decrease all ally priorities that come
-		from the attack path, since an AS further up the attack path is
-		responsible for splitting towards it.
-
-		:param pkt: the incoming packets
-
-		:type pkt: dict
-		"""
-		self.logger.info(f"[{self.env.now}] Reacting to Attack Path RAT")
-
-		# note that this AS is on the attack path, and not its predecessor
-		self.on_attack_path = True
-		self.attack_path_predecessor = pkt["last_hop"]
-
-		# increase the priority of the original next hop entry
-		self.router_table.increase_original_priority()
-		# decrease the priority of all ally paths that come from the attack path
-		self.router_table.reduce_allies_based_on_asn(pkt["last_hop"])
 
 
 	def __str__(self):

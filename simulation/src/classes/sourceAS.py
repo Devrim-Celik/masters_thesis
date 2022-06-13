@@ -19,15 +19,12 @@ class SourceAS(AutonomousSystem):
 	:param full_attack_vol: the amount of traffic that the DDoS attack emits
 	:param attack_freq: delay, in steps, between sending attacks
 	:param as_path_to_victim: the path to the victim, by nodes
-	:param atk_path_signal: whether the atk_path_singal was send out and
-		is currently in affect
 	:param attack_traffic_recording: records the send out attack packets
 		for later plotting
 
 	:type attack_vol_limits: tuple[int, int]
 	:type attack_freq: float
 	:type as_path_to_victim: list[int]
-	:type atk_path_signal: bool
 	:type attack_traffic_recording:	list[float]
 	"""
 
@@ -46,7 +43,6 @@ class SourceAS(AutonomousSystem):
 		self.attack_stop = 300
 		self.attack_freq = args[-1]["attack_freq"]
 		self.as_path_to_victim = args[-1]["as_path_to_victim"]
-		self.atk_path_signal = False
 		self.attack_traffic_recording = []
 
 
@@ -137,29 +133,8 @@ class SourceAS(AutonomousSystem):
 		self.router_table.update_attack_volume(pkt["content"]["attack_volume"])
 		self.helping_node.append(pkt["src"])
 
-		if (pkt["content"]["attacker_asn"] == self.asn) and (not self.atk_path_signal):
-			# attack path signal
-			self.atk_path_signal = True
+		if (pkt["content"]["attacker_asn"] == self.asn):
 			self.on_attack_path = True
-			self.logger.info(f"[{self.env.now}] Help registered. Determining Attack Path.")
-			pkt = {
-				"identifier": f"atk_path_signal_from_{self.asn}_{float(self.env.now):6.2}",
-				"type": "RAT",
-				"src": self.asn,
-				"dst": None,
-				"last_hop": self.asn,
-				"content": {
-					"relay_type": "original_next_hop",
-					"protocol": "attack_path",
-					"as_path_to_victim": self.as_path_to_victim,
-					"handled_AS": [],
-					"hc": 0
-				}
-			}
-			self.send_packet(pkt, self.router_table.determine_highest_original())
-			self.seen_rats.append(pkt["identifier"])
-
-			# own reaction
 			self.router_table.increase_original_priority()
 
 
