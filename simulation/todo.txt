@@ -1,5 +1,17 @@
 todos:
 
+1. Report - Background
+2. Victim percentages
+3. Multiples Sources
+4. Report - Problem Statement an DpoS
+5. Think about experiments
+--- Meeting
+6. Implement Experiments
+7. Report - Results
+8. Report - Abstract and Conclusion
+
+
+
 NEW GENERATION TODOs
 1. Help and Help Retract should be more sophisticated
 2. Support Retractment

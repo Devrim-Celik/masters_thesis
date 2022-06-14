@@ -32,6 +32,8 @@ class AllyAS(AutonomousSystem):
 		# the path to the victim
 		self.as_path_to_victim = args[-1]["as_path_to_victim"]
 
+		# helping
+		self.helping_nodes = []
 
 	def send_support(self, victim):
 
@@ -71,31 +73,14 @@ class AllyAS(AutonomousSystem):
 		:type pkt: dict
 		"""
 
-		# firstly denote the current amount of attack volume on the victim
-		self.router_table.update_attack_volume(pkt["content"]["attack_volume"])
-		self.logger.info(f"[{self.env.now}] Help registered.")
-		self.attack_vol_on_victim = pkt["content"]["attack_volume"]
-		self.send_support(pkt["src"])
+		if not pkt["src"] in self.helping_nodes:
+			self.helping_nodes.append(pkt["src"])
 
-		# and send directly to all allies; note, that this is implemented as RAT pkg,
-		# but isnt really one
-		pkt = {"identifier": f"ally_exchange_from_{self.asn}_{float(self.env.now):6.2}",
-			   "type": "RAT",
-			   "src": self.asn,
-			   "dst": None,
-			   "last_hop": self.asn,
-			   "content": {"relay_type": "broadcast", 
-						   "scrubbing_capability": self.scrubbing_capability, 
-						   "protocol": "ally_exchange", 
-						   "ally": self.asn, 
-						   "victim": self.as_path_to_victim[-1], 
-						   "as_path_to_victim": self.as_path_to_victim, 
-						   "hc": 0
-				}
-		}
-		
-		self.send_packet(pkt, self.ebgp_AS_peers)
-
+			# firstly denote the current amount of attack volume on the victim
+			self.router_table.update_victim_info(pkt["content"]["scrubbing_capability"], pkt["content"]["attack_volume"], pkt["content"]["ally_percentage"])
+			self.logger.info(f"[{self.env.now}] Help registered.")
+			self.attack_vol_on_victim = pkt["content"]["attack_volume"]
+			self.send_support(pkt["src"])
 
 	def __str__(self):
 		return f"AS-{self.asn} (Ally) [{self.scrubbing_capability}]"

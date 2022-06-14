@@ -97,7 +97,7 @@ class SourceAS(AutonomousSystem):
 					self.standard_load - 10,
 					self.standard_load + 10
 				)
-
+			
 			self.attack_traffic_recording.append((self.env.now, attack_volume))
 			pkt = {
 				"identifier": f"Attack_Packet_{self.asn}_{atk_indx}",
@@ -130,7 +130,7 @@ class SourceAS(AutonomousSystem):
 
 		:type pkt: dict
 		"""
-		self.router_table.update_attack_volume(pkt["content"]["attack_volume"])
+		self.router_table.update_victim_info(pkt["content"]["scrubbing_capability"], pkt["content"]["attack_volume"], pkt["content"]["ally_percentage"])
 		self.helping_node.append(pkt["src"])
 
 		if (pkt["content"]["attacker_asn"] == self.asn):

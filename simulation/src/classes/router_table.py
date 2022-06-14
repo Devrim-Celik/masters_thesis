@@ -72,6 +72,8 @@ class RoutingTable():
 		self.asn = asn
 		self.logger = logger
 		self.attack_vol_on_victim = None
+		self.victim_scrubbing_capability = None
+		self.ally_percentage = 1.
 		# for printing
 		self.new_line = "\n"
 		self.tab = "\t"
@@ -111,24 +113,24 @@ class RoutingTable():
 			# the victim
 			else:
 				# variables used
-				traffic_amount_already_split_away = self.table[(self.table["origin"].str.contains("ally").any()) & (self.table["priority"] != 3)]["scrubbing_capabilities"].sum()
-				traffic_amount_split_away_here = self.table[(self.table["origin"].str.contains("ally").any()) & (self.table["priority"] == 3)]["scrubbing_capabilities"].sum()
+				traffic_amount_already_split_away = self.table[(self.table["origin"].str.contains("ally").any()) & (self.table["priority"] != 3)]["scrubbing_capabilities"].sum() * self.ally_percentage
+				traffic_amount_split_away_here = self.table[(self.table["origin"].str.contains("ally").any()) & (self.table["priority"] == 3)]["scrubbing_capabilities"].sum() * self.ally_percentage
 
 				# calculate the amount of arriving traffic, by subracting
 				# ally scrubbing capabilities that receive before on the
 				# attack path
 				incoming_taffic_magnitude = self.attack_vol_on_victim - traffic_amount_already_split_away
 
-				# if the scrubbing capabilities of the allies at this node
-				# exceed this, we split the traffic between those allies
-				# proportionally, by setting incoming_taffic_magnitude to the
-				# sum of all those allies scrubbing capabilities
-				if traffic_amount_split_away_here > incoming_taffic_magnitude:
+				# if splitting away to the allies leaves less to the victim than it can handle,
+				# then do this
+				reduce_factor = 1.0
+				if incoming_taffic_magnitude - traffic_amount_split_away_here < self.victim_scrubbing_capability:
+					reduce_factor = 1 - self.victim_scrubbing_capability/incoming_taffic_magnitude
 					incoming_taffic_magnitude = traffic_amount_split_away_here
 
 				# set the allies
 				self.table["split_percentage"] = self.table.apply(
-					lambda row: row["scrubbing_capabilities"] / incoming_taffic_magnitude if row["priority"] == 3 else 0,
+					lambda row: reduce_factor * self.ally_percentage * row["scrubbing_capabilities"] / incoming_taffic_magnitude if row["priority"] == 3 else 0,
 					axis=1
 				)
 				# then the highest original entry
@@ -193,7 +195,7 @@ class RoutingTable():
 		self.update()
 
 
-	def update_attack_volume(self, attack_volume):
+	def update_victim_info(self, victim_scrubbing_capability, attack_volume, ally_percentage):
 		"""
 		Update the current estimation of the attack volume.
 
@@ -201,6 +203,8 @@ class RoutingTable():
 		:type attack_volume: float
 		"""
 		self.attack_vol_on_victim = attack_volume
+		self.victim_scrubbing_capability = victim_scrubbing_capability
+		self.ally_percentage = ally_percentage
 		self.update()
 
 

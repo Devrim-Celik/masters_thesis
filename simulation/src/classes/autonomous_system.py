@@ -165,8 +165,6 @@ class AutonomousSystem(object):
 				# call the corresponding reaction
 				if pkt["content"]["protocol"] == "help":
 					self.rat_reaction_help(pkt)
-				elif pkt["content"]["protocol"] == "help_update":
-					self.rat_reaction_help_update(pkt)
 				elif pkt["content"]["protocol"] == "help_retractment":
 					self.rat_reaction_help_retractment(pkt)
 				elif pkt["content"]["protocol"] == "support":
@@ -212,20 +210,6 @@ class AutonomousSystem(object):
 		)
 
 
-	def rat_reaction_help_update(self, pkt):
-		"""
-		This method implements the response to receiving a RAT packet, with
-		the help update protocol. The router table will receive an update
-		regarding the current estimate of the attack volume.
-
-		:param pkt: the incoming packets
-
-		:type pkt: dict
-		"""
-		self.logger.info(f"Reacting to Help Update RAT")
-		self.router_table.update_attack_volume(pkt["content"]["attack_volume"])
-
-
 	def rat_reaction_help_retractment(self, pkt):
 		"""
 		This method implements the response to receiving a RAT packet, with
@@ -247,8 +231,6 @@ class AutonomousSystem(object):
 			self.attack_path_predecessors = None
 		if hasattr(self, "atk_path_signal"):
 			self.atk_path_signal = False
-		if hasattr(self, "nr_help_updates"):
-			self.nr_help_updates = 0
 		if hasattr(self, "attack_volume_approx"):
 			self.attack_volume_approx = None
 		if hasattr(self, "ally_help"):
@@ -268,15 +250,13 @@ class AutonomousSystem(object):
 		"""
 		self.logger.info(f"Reacting to Help RAT")
 		self.helping_node.append(pkt["src"])
-		self.router_table.update_attack_volume(pkt["content"]["attack_volume"])
-
-
+		self.router_table.update_victim_info(pkt["content"]["scrubbing_capability"], pkt["content"]["attack_volume"], pkt["content"]["ally_percentage"])
 
 		attack_path_predecessors = self.network.get_atk_path_predecessors(self.asn)
 		self.on_attack_path = bool(attack_path_predecessors)
 		self.attack_path_predecessors = attack_path_predecessors
 
-		if self.on_attack_path:
+		if self.on_attack_path and pkt["content"]["initial_call"]:
 			# increase the priority of the original next hop entry
 			self.router_table.increase_original_priority()
 			# decrease the priority of all ally paths that come from the attack path

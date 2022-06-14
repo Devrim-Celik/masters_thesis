@@ -79,7 +79,8 @@ class Internet(object):
 		self.plot_values = {
 			"victim_scrubbing_capabilitiy": None,
 			"victim_help_calls": [],
-			"victim_help_retractment_calls": []
+			"victim_help_retractment_calls": [],
+			"victim_attack_approximations": []
 		}
 
 		# save a plot of the initial graph
@@ -251,6 +252,11 @@ class Internet(object):
 			ls="dotted"
 		)
 
+		plt.plot(
+			*list(zip(*self.plot_values["victim_attack_approximations"])),
+			label=f"Attack Approximation"
+		)
+
 		# plot all sinks (victim + allies)
 		for sink in self.allies + [self.victim]:
 			plt.scatter(
@@ -268,6 +274,7 @@ class Internet(object):
 			label="victim_scrubbing_capability"
 		)
 
+		"""
 		for tp, val in self.plot_values["victim_help_calls"]:
 			plt.annotate(
 				f"[AS{self.victim.asn}]\nHelp Signal Issued",
@@ -279,6 +286,7 @@ class Internet(object):
 				horizontalalignment="center",
 				arrowprops=dict(arrowstyle='-|>', lw=2)
 			)
+		"""
 		for tp, val in self.plot_values["victim_help_retractment_calls"]:
 			plt.annotate(
 				f"[AS{self.victim.asn}]\nHelp Signal Retracted",
