@@ -5,8 +5,10 @@ Author:
 	Devrim Celik 08.06.2022
 """
 
-from .autonomous_system import AutonomousSystem
+import simpy 
+import numpy as np
 
+from .autonomous_system import AutonomousSystem
 
 class VictimAS(AutonomousSystem):
 
@@ -18,8 +20,6 @@ class VictimAS(AutonomousSystem):
 	:param as_path_to_victim:
 	:param help_signal_issued: used to recognize, whether a help signal
 		has already been issued
-	:param attack_volume_approx: used to keep track of the attack traffic
-		approximation
 	:param ally_help: for collecting the allies that are helping this vctim
 
 	:type scrubbing_capability: int
@@ -34,23 +34,37 @@ class VictimAS(AutonomousSystem):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args)
 
-		# remember scrubbing capabilitiy
+		##### set attributes
+		# standard
 		self.scrubbing_capability = args[-1]["scrubbing_capability"]
 		self.as_path_to_victim = []
-		self.help_signal_issued = False
-		self.attack_volume_approx = None
+		self.attack_src = None
+		# for attack volume approximation
 		self.attack_volume_approximations = []
 		self.expected_attack_volume = self.scrubbing_capability
-		self.alpha_ewa = 0.6
-		self.ally_percentage = 1.0
-		self.ally_help = {}
+		self.alpha_ewa = 0.3
+		self.accelerator = 0.0
+		self.momentum_starting_value = 0.001
+		self.accelerator_factor = 0.25
+		self.momentum_limit_value = 0.75
+
+		# for help packet config
 		self.help_msg_delay = 11
 		self.help_msg_ctr = 0
-		self.attack_src = None
-		# TODO
+		# for help signal and retractment
 		self.last_retractment = -10000000
 		self.last_help = -10000000
+		self.help_signal_issued = False
 		self.new_signal_threshold = 25
+		self.help_process = None
+		# for ally activation
+		self.ally_activation_recordings = []
+		self.ally_activation = 1.0
+		self.ally_help_info = {}
+
+		self.t2test = []
+		self.t3test = []
+
 
 	def attack_vol_approximation(self):
 		"""
@@ -59,26 +73,66 @@ class VictimAS(AutonomousSystem):
 		:return: the approximated attack volume
 		:rtype: float
 		"""
+		# HUGE TODO HUGE TODO: Just compare it to the victim scrubbing capability. If everything works as planned, we would expect 
+		# the incoming traffic to be exactly that. 
 
-		# TODO this needs a part, where it compares against expected and uses this to update
-		# ONE QUICK IDEA: if ally perc == 1, use this, since i
-		# MAYBE THIS IDEA DOESNT BELONG HERE, BUT WITH ALLY SPLIT PERC
-		# what i mean: if we receive more than we expect -> the attack volume changes, AND, the split percentage???
 
-		recent = self.received_attacks[-1][1] + sum(self.ally_help.values()) * self.ally_percentage
-		if self.attack_volume_approximations:
-			self.attack_volume_approx = self.alpha_ewa * recent + (1- self.alpha_ewa) * self.attack_volume_approximations[-1]
+		if not self.attack_volume_approximations:
+			recent = self.received_attacks[-1][1]
+		elif True:
+			to_allies = sum([d["scrubbing_capability"] * d["activation"] for d in self.ally_help_info.values()])
+			recent = to_allies + self.received_attacks[-1][1] # naive
+			if sum([d["scrubbing_capability"] for d in self.ally_help_info.values()]) > self.attack_volume_approximations[-1]: # nuances if possible # TODO if condition is not really perfect...
+				ratio = self.received_attacks[-1][1] / self.scrubbing_capability
+				if np.sign(ratio - 1) == np.sign(self.accelerator):
+					self.accelerator *= (1 + self.accelerator_factor)
+				else:
+					self.accelerator = np.sign(ratio - 1) * self.momentum_starting_value
+				
+				# apply limits to the momementun
+				self.accelerator = min(max(self.accelerator, -self.momentum_limit_value), self.momentum_limit_value)
+
+
+				recent *= 1 + self.accelerator
+
+		"""
+		elif True:
+			recent = self.received_attacks[-1][1] + sum([d["scrubbing_capability"] * d["activation"] for d in self.ally_help_info.values()])
 		else:
-			self.attack_volume_approx = recent
+			recent = self.attack_volume_approximations[-1] * max(min(ratio, 1.05), 0.95) # TODO old one was without min max 
+		"""
+		"""
+		if self.ally_help_info and t3 != 1:
+			recent = self.attack_volume_approximations[-1] + self.attack_volume_approximations[-1]* (1 - self.received_attacks[-1][1]/(t2 * (1 - t3))) * 0.1
+		"""
 
-		self.attack_volume_approximations.append(self.attack_volume_approx)
+		self.logger.info(f"{self.env.now}: recent: {self.received_attacks[-1][1]} + {self.ally_help_info}")
 
+
+		# smoothing using previous attack volume approximation
+		if self.attack_volume_approximations:
+			new_approx = self.alpha_ewa * recent + (1 - self.alpha_ewa) * self.attack_volume_approximations[-1]
+			self.logger.info(f"{self.env.now}: recent: {recent}, old: {self.attack_volume_approximations[-1]} and alpha {self.alpha_ewa}.")
+		else:
+			new_approx = recent
+
+
+		self.attack_volume_approximations.append(new_approx)
 
 		self.network.plot_values["victim_attack_approximations"].append(
-			(self.env.now, self.attack_volume_approx)
+			(self.env.now, new_approx)
 		)
 
-		return self.attack_volume_approx
+		return new_approx
+
+
+
+	def calculate_new_ally_activation(self):
+		if self.ally_help_info:
+			ally_activation = min(max((self.attack_volume_approximations[-1] - self.scrubbing_capability) / sum([d["scrubbing_capability"] for d in self.ally_help_info.values()]), 0), 1)
+		else:
+			ally_activation = 1.0
+		return ally_activation
 
 
 	def help_condition(self, nr_last_rcv=5, min_atk_pkts=5):
@@ -98,7 +152,7 @@ class VictimAS(AutonomousSystem):
 		atk_pkts = 0
 
 		for atk_time, atk_vol in self.received_attacks[:-nr_last_rcv]:
-			if (self.attack_vol_approximation()> self.scrubbing_capability):
+			if (self.attack_volume_approximations[-1] > self.scrubbing_capability):
 				atk_pkts += 1
 
 		return (atk_pkts >= min_atk_pkts) and (self.env.now - self.last_retractment) > self.new_signal_threshold
@@ -122,35 +176,54 @@ class VictimAS(AutonomousSystem):
 		atk_pkts = 0
 
 		for atk_time, atk_vol in self.received_attacks[:-nr_last_rcv]:
-			if (self.attack_vol_approximation() < self.scrubbing_capability):
+			if (self.attack_volume_approximations[-1] < self.scrubbing_capability):
 				atk_pkts += 1
 
 		return (atk_pkts >= min_atk_pkts) and (self.env.now - self.last_help) > self.new_signal_threshold
 
+	def set_ally_activation_w_delay(self, delay, new_activation, ally):
+		try:
+			yield self.env.timeout(delay)
+			# TODO self.ally_activation_recordings.append([self.env.now, new_activation])
+			self.logger.info(f"{self.env.now} | Setting Ally {ally} percentage to {new_activation}.")
+			self.ally_help_info[ally]["activation"] = new_activation
+		except simpy.Interrupt:
+			pass
 
 	def help_cycle(self):
-		while True:
-			help_pkt = {
-				"identifier": f"help_{self.help_msg_ctr}_{self.asn}",
-				"type": "RAT",
-				"src": self.asn,
-				"dst": None,
-				"last_hop": self.asn,
-				"content": {
-					"attack_volume": self.attack_vol_approximation(), # TODO 
-					"attacker_asn": self.attack_src,
-					"scrubbing_capability": self.scrubbing_capability,
-					"relay_type": "broadcast" if self.help_msg_ctr == 0 else "broadcast", # TODO sencdond broadcast to attck path
-					"protocol": "help",
-					"ally_percentage": self.ally_percentage,
-					"initial_call": self.help_msg_ctr == 0,
-					"hc": 0
+
+		try:
+			processes = []
+			while True:
+				new_ally_activation = self.calculate_new_ally_activation()
+				for ally, dic in self.ally_help_info.items():
+					processes.append([self.env.process(self.set_ally_activation_w_delay(dic["splitting_node_delay"]*2, new_ally_activation, ally)), self.env.now + dic["splitting_node_delay"]*2])
+				help_pkt = {
+					"identifier": f"help_{self.help_msg_ctr}_{self.asn}",
+					"type": "RAT",
+					"src": self.asn,
+					"dst": None,
+					"last_hop": self.asn,
+					"content": {
+						"attack_volume": self.attack_volume_approximations[-1], # TODO 
+						"attacker_asn": self.attack_src,
+						"scrubbing_capability": self.scrubbing_capability,
+						"relay_type": "broadcast" if self.help_msg_ctr == 0 else "broadcast", # TODO sencdond broadcast to attck path
+						"protocol": "help",
+						"ally_percentage": new_ally_activation,
+						"initial_call": self.help_msg_ctr == 0,
+						"hc": 0
+					}
 				}
-			}
-			self.logger.info(f"Help Packet \"{help_pkt['identifier']}\" sent.")
-			self.help_msg_ctr += 1
-			self.send_packet(help_pkt, self.ebgp_AS_peers)
-			yield self.env.timeout(self.help_msg_delay)
+				self.logger.info(f"Help Packet \"{help_pkt['identifier']}\" sent.")
+				self.help_msg_ctr += 1
+				self.send_packet(help_pkt, self.ebgp_AS_peers)
+				yield self.env.timeout(self.help_msg_delay)
+
+		except simpy.Interrupt:
+			for p, t in processes:
+				if t > self.env.now:
+					p.interrupt()
 
 	def attack_reaction(self, pkt):
 		"""
@@ -176,17 +249,17 @@ class VictimAS(AutonomousSystem):
 			(self.env.now, pkt["content"]["attack_volume"])
 		)
 
+		self.attack_vol_approximation()
 
 		# Case: The attack is larger than our scrubbing capabilities / then we expect
 		if self.expected_attack_volume < int(pkt["content"]["attack_volume"]):
-			
 			# if this is the first attack packet we see
 			if not self.help_signal_issued:
 				self.logger.info(f"[{self.env.now}] Initiating Help Cycle.")
 				# we set the attack volume approximation
-				self.attack_volume_approx = pkt["content"]["attack_volume"]
+				self.attack_volume_approximations.append(pkt["content"]["attack_volume"])
 				self.attack_src = pkt["src"]
-				self.env.process(self.help_cycle())
+				self.help_process = self.env.process(self.help_cycle())
 
 				self.help_signal_issued = True
 
@@ -194,9 +267,14 @@ class VictimAS(AutonomousSystem):
 
 		# Case: We do not need help anymore
 		elif self.help_signal_issued and self.retractment_condition():
-			print("IMPLEMENT ME!, STOP THE HELP!!")
+			if self.help_process != None:
+				self.help_process.interrupt()
+				self.help_process
 			self.logger.info(f"[{self.env.now}] Issueing Help Retractment.")
+			self.ally_activation = 1.0
+			self.ally_help_info = {}
 			self.help_signal_issued = False
+			self.accelerator = 0.0
 			self.last_retractment = self.env.now
 			# TODO right now we broadcast this pkt, but, we could also say: do
 			# only broadcast it to ebgp peers from which you received a
@@ -217,7 +295,6 @@ class VictimAS(AutonomousSystem):
 			self.rat_reaction_help_retractment(help_pkt)
 
 			self.send_packet(help_pkt, self.ebgp_AS_peers)
-			
 
 
 	def rat_reaction_support(self, pkt):
@@ -232,9 +309,11 @@ class VictimAS(AutonomousSystem):
 		:type pkt: dict
 		"""
 		if self.help_signal_issued:
-			self.ally_help[f"ally{pkt['src']}"] = pkt["content"]["scrubbing_capability"]
-			self.ally_percentage = min((self.attack_volume_approx - self.scrubbing_capability) / sum(self.ally_help.values()), 1)
-
-
+			try:
+				self.ally_help_info[f"ally{pkt['src']}"] = {"scrubbing_capability": pkt["content"]["scrubbing_capability"], "splitting_node_delay": self.env.now - pkt["content"]["splitting_node_time"], "activation": 1.0}
+			except:
+				print("\n"*5)
+				print(pkt)
+				print("\n"*5)
 	def __str__(self):
 		return f"AS-{self.asn} (Victim) [{self.scrubbing_capability }]"

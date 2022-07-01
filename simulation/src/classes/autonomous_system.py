@@ -24,7 +24,7 @@ class AutonomousSystem(object):
 		through EBGP sessions
 	:param seen_rats: a list of all seen route advertisements, in order to
 		recognize novel ones
-	:param advertised: the list of ASNs (in real life it would IP blocks) this
+	:param advertised_asns: the list of ASNs (in real life it would IP blocks) this
 		 AS is advertising routes for and ready to receive packets for
 	:param received_attacks: to collected data on received attacks
 	:param on_attack_path: to denote, whether this AS lies on an attack path
@@ -38,7 +38,7 @@ class AutonomousSystem(object):
 	:type router_table: router_table.RouterTable
 	:type ebgp_AS_peers: list[int]
 	:type seen_rats: list[str]
-	:type advertised: list[int]
+	:type advertised_asns: list[int]
 	:type received_attacks: list[tuple]
 	:type on_attack_path: bool
 	:type attack_path_predecessor: int
@@ -56,15 +56,18 @@ class AutonomousSystem(object):
 		self.router_table = router_table
 		self.ebgp_AS_peers = ebgp_AS_peers
 		self.seen_rats = []
-		self.advertised = [self.asn]
+		self.advertised_asns = [self.asn]
 		self.received_attacks = []
 		self.on_attack_path = False
 		self.attack_path_predecessors = []
-		self.helping_node = []
+		self.helping_nodes = []
+		
 		# for printing
 		self.new_line = "\n"
 		self.tab = "\t"
 		
+		self.time_to_change_splitting_nodes = {}
+
 
 	def send_packet(self, pkt, next_hops):
 		"""
@@ -143,13 +146,41 @@ class AutonomousSystem(object):
 		# for standard packets
 		if pkt["type"] == "STD":
 			self.process_std_pkt(pkt)
+
 		# for RAT packets
 		elif pkt["type"] == "RAT":
+
+			# react to it, if this packet has not already been seen
+			if not pkt["identifier"] in self.seen_rats:
+				self.seen_rats.append(pkt["identifier"])
+
+				# call the corresponding reaction
+				if pkt["content"]["protocol"] == "help":
+					self.rat_reaction_help(pkt)
+				elif pkt["content"]["protocol"] == "help_retractment":
+					self.rat_reaction_help_retractment(pkt)
+				elif pkt["content"]["protocol"] == "support":
+					self.rat_reaction_support(pkt)
+
 
 			# distributed as specified by the protocol
 			pkt_tmp = copy.deepcopy(pkt)
 			pkt_tmp["last_hop"] = self.asn
 
+			# íf the RAT is a support message, determine whether this AS will
+			# responsible for splitting traffic towards the ally
+			# if yes, add the time at which it is processed to the pkt
+			if (pkt["content"]["protocol"] == "support" and 
+				self.router_table.splitting_node and 
+				f"ally_{pkt['content']['ally']}" in self.router_table.table[self.router_table.table["split_percentage"] > 0]["origin"].values
+				):
+				pkt_tmp["content"]["splitting_node_time"] = self.env.now
+				
+				# also, denote that changes towards this splitting node happen immediately
+				self.time_to_change_splitting_nodes[pkt["src"]] = 0
+
+
+			# depending on the specified relay type, send out packets
 			if pkt["content"]["relay_type"] == "original_next_hop":
 				next_hops = self.router_table.determine_highest_original()
 				self.send_packet(pkt_tmp, next_hops) 
@@ -158,17 +189,6 @@ class AutonomousSystem(object):
 				self.send_packet(pkt_tmp, next_hops) 
 			elif pkt["content"]["relay_type"] == "no_relay":
 				pass
-
-			# react to it, if this packet has not already been seen
-			if not pkt["identifier"] in self.seen_rats:
-				self.seen_rats.append(pkt["identifier"])
-				# call the corresponding reaction
-				if pkt["content"]["protocol"] == "help":
-					self.rat_reaction_help(pkt)
-				elif pkt["content"]["protocol"] == "help_retractment":
-					self.rat_reaction_help_retractment(pkt)
-				elif pkt["content"]["protocol"] == "support":
-					self.rat_reaction_support(pkt)
 
 
 	def process_std_pkt(self, pkt):
@@ -185,7 +205,7 @@ class AutonomousSystem(object):
 
 		# if the destination of this packet is an address this AS advertise,
 		# this node is getting attacked
-		if pkt["dst"] in self.advertised:
+		if pkt["dst"] in self.advertised_asns:
 			self.attack_reaction(pkt)
 		# else, relay it
 		else:
@@ -210,6 +230,46 @@ class AutonomousSystem(object):
 		)
 
 
+	def rat_reaction_help(self, pkt):
+		"""
+		This method implements the response to receiving a RAT packet, with
+		the help protocol. A default AS will simply broadcast it to its peers.
+
+		:param pkt: the incoming packets
+
+		:type pkt: dict
+		"""
+		self.logger.info(f"Reacting to Help RAT")
+
+		# denote that this AS is now helping this victim
+		if not pkt["src"] in self.helping_nodes:
+			self.helping_nodes.append(pkt["src"])
+
+		# update the victim related information in the router table
+		self.router_table.update_victim_info(pkt["content"]["scrubbing_capability"], pkt["content"]["attack_volume"])
+
+		# apply activation timers for the different splitting nodes further
+		# up the attack path
+		for ally, delay in self.time_to_change_splitting_nodes.items():
+			self.logger.info(f"XXX - {ally} - {delay}")
+			self.env.process(self.router_table.set_activation_with_delay(ally, pkt["content"]["ally_percentage"], delay*2))
+
+		# denote the node that is just before this node in the attack path
+		attack_path_predecessors = self.network.get_atk_path_predecessors(self.asn)
+		self.on_attack_path = bool(attack_path_predecessors)
+		self.attack_path_predecessors = attack_path_predecessors
+
+		if self.on_attack_path:
+			# increase the priority of the original next hop entry
+			self.router_table.increase_original_priority()
+			# decrease the priority of all ally paths that come from the attack path
+			for asn in self.attack_path_predecessors:
+				self.router_table.reduce_allies_based_on_asn(asn)
+
+		else:
+			pass # happens when we are not on attack path anymore
+
+
 	def rat_reaction_help_retractment(self, pkt):
 		"""
 		This method implements the response to receiving a RAT packet, with
@@ -222,7 +282,7 @@ class AutonomousSystem(object):
 		"""
 		self.logger.info(f"Reacting to Help Retractment RAT")
 		self.router_table.reset()
-		self.helping_node = []
+		self.helping_nodes = []
 
 		# reset any attribute that might have been set
 		if hasattr(self, "on_attack_path"):
@@ -237,34 +297,11 @@ class AutonomousSystem(object):
 			self.ally_help = {}
 		if hasattr(self, "supporting_allies"):
 			self.supporting_allies = []
-
-
-	def rat_reaction_help(self, pkt):
-		"""
-		This method implements the response to receiving a RAT packet, with
-		the help protocol. A default AS will simply broadcast it to its peers.
-
-		:param pkt: the incoming packets
-
-		:type pkt: dict
-		"""
-		self.logger.info(f"Reacting to Help RAT")
-		self.helping_node.append(pkt["src"])
-		self.router_table.update_victim_info(pkt["content"]["scrubbing_capability"], pkt["content"]["attack_volume"], pkt["content"]["ally_percentage"])
-
-		attack_path_predecessors = self.network.get_atk_path_predecessors(self.asn)
-		self.on_attack_path = bool(attack_path_predecessors)
-		self.attack_path_predecessors = attack_path_predecessors
-
-		if self.on_attack_path and pkt["content"]["initial_call"]:
-			# increase the priority of the original next hop entry
-			self.router_table.increase_original_priority()
-			# decrease the priority of all ally paths that come from the attack path
-			for asn in self.attack_path_predecessors:
-				self.router_table.reduce_allies_based_on_asn(asn)
-
-		else:
-			pass # happens when we are not on attack path anymore
+		if hasattr(self, "helping_nodes"):
+			if pkt["src"] in self.helping_nodes:
+				self.helping_nodes.remove(pkt["src"])
+		if hasattr(self, "time_to_change_splitting_nodes"):
+			self.time_to_change_splitting_nodes = {}
 
 
 	def rat_reaction_support(self, pkt):
@@ -279,9 +316,9 @@ class AutonomousSystem(object):
 
 		:type pkt: dict
 		"""
-		if pkt["content"]["as_path_to_victim"][-1] in self.helping_node:
-			self.logger.info(f"Reacting to Support RAT")
 
+		if pkt["content"]["as_path_to_victim"][-1] in self.helping_nodes:
+			self.logger.info(f"Reacting to Support RAT")
 			# add the advertised route the routing table
 			entry = {
 				"identifier": f"support_RAT_reaction_{int(self.env.now)}",
@@ -293,9 +330,15 @@ class AutonomousSystem(object):
 				"as_path": pkt["content"]["as_path_to_victim"][pkt["content"]["hc"]:],
 				"origin": f"ally_{pkt['src']}",
 				"recvd_from": pkt["last_hop"],
+				"activation": 1.0,
 				"time_added": self.env.now
 			}
 			self.router_table.add_entry(entry)
+
+			# also, if this support message came further up the path, denote the time
+			# it takes for it to receive messages
+			if self.on_attack_path and "splitting_node_time" in pkt["content"].keys():
+				self.time_to_change_splitting_nodes[pkt['src']] = self.env.now - pkt["content"]["splitting_node_time"]
 
 
 	def __str__(self):

@@ -32,17 +32,13 @@ class AllyAS(AutonomousSystem):
 		# the path to the victim
 		self.as_path_to_victim = args[-1]["as_path_to_victim"]
 
-		# helping
-		self.helping_nodes = []
-
 	def send_support(self, victim):
 
 		self.logger.info(f"[{self.env.now}] Sending Support.")
 
 		# add the address of the victim node to the set of addresses this AS is ready to
 		# accept packets for
-		self.advertised.append(victim)
-		self.helping_node.append(victim)
+		self.advertised_asns.append(victim)
 
 		# send out the support message
 		pkt = {"identifier": f"support_from_{self.asn}_{float(self.env.now):6.2}",
@@ -77,7 +73,7 @@ class AllyAS(AutonomousSystem):
 			self.helping_nodes.append(pkt["src"])
 
 			# firstly denote the current amount of attack volume on the victim
-			self.router_table.update_victim_info(pkt["content"]["scrubbing_capability"], pkt["content"]["attack_volume"], pkt["content"]["ally_percentage"])
+			self.router_table.update_victim_info(pkt["content"]["scrubbing_capability"], pkt["content"]["attack_volume"])
 			self.logger.info(f"[{self.env.now}] Help registered.")
 			self.attack_vol_on_victim = pkt["content"]["attack_volume"]
 			self.send_support(pkt["src"])

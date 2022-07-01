@@ -149,7 +149,7 @@ class Internet(object):
 				self,
 				as_logger,
 				node_indx,
-				RoutingTable(self.env, init_routing_table, node_indx, as_logger),
+				RoutingTable(self.env, self, init_routing_table, node_indx, as_logger),
 				neighbors,
 				additional_attr
 			))
@@ -180,7 +180,7 @@ class Internet(object):
 		# wait for the propagation delay NOTE random delay because
 		# of concurrency issues
 		yield self.env.timeout(
-			self.propagation_delay + random.uniform(-0.01, 0.01)
+			self.propagation_delay
 		)
 		self.logger.debug(f"[{self.env.now}] Sending attack message to {[t[0] for t in next_hops_w_perc]} with percentages {[t[1] for t in next_hops_w_perc]} from {pkt['last_hop']}.")
 
@@ -257,6 +257,18 @@ class Internet(object):
 			label=f"Attack Approximation"
 		)
 
+
+		plt.plot(
+			*list(zip(*self.victim.t2test)),
+			label=f"T2"
+		)
+
+		plt.plot(
+			*list(zip(*self.victim.t3test)),
+			label=f"T3"
+		)
+
+
 		# plot all sinks (victim + allies)
 		for sink in self.allies + [self.victim]:
 			plt.scatter(
@@ -299,11 +311,11 @@ class Internet(object):
 				arrowprops=dict(arrowstyle='-|>', lw=2)
 			)
 
-		plt.legend(loc="upper right")
+		plt.legend(loc="upper right", prop={"size": 17}, markerscale=6)
 		plt.tight_layout()
 		plt.savefig(f"{self.figure_subpath}/recorded_attack_traffic.png", dpi=400)
 		plt.savefig(f"{self.figure_subpath}/recorded_attack_traffic.svg", dpi=400)
-
+		plt.show()
 
 	def generate_networkx_graph(self, changed_edge_color="purple"):
 		"""

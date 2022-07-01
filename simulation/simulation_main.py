@@ -86,8 +86,8 @@ def main():
 	args = parser.parse_args()
 
 	# set the seed
+	
 	args.seed = 1 # TODO remove
-	args.simulation_length = 300
 	random.seed(args.seed)
 	np.random.seed(args.seed)
 
@@ -132,7 +132,6 @@ def main():
 
 	# also create a plot of the current topology
 	net.generate_networkx_graph()
-
 
 if __name__ == "__main__":
 	main()

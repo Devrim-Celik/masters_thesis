@@ -205,6 +205,7 @@ def generate_directed_AS_graph(nr_ASes, nr_allies, full_attack_vol):
     for ally_indx in allies:
         #G.nodes[ally_indx]["scrubbing_cap"] = random.randint(100, int(avg_scrub)) * 1.5
         #G.nodes[ally_indx]["scrubbing_cap"] = random.randint(50, 100) * 6
-        G.nodes[ally_indx]["scrubbing_cap"] = fake_shit[ally_indx]
+        #G.nodes[ally_indx]["scrubbing_cap"] = fake_shit[ally_indx]
+        G.nodes[ally_indx]["scrubbing_cap"] = random.randint(200, 600)
 
     return G, victim, adversary, allies
